@@ -1,0 +1,3 @@
+"C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\Bin\ildasm.exe" HttpWebRequestWrapper.LowLevel.dll /out=code.asm
+echo Here changes to code.asm should be done.
+C:\Windows\Microsoft.NET\Framework\v4.0.30319\ilasm.exe /dll code.asm
