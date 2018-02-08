@@ -1,4 +1,3 @@
-version: 0.2.{build}
 image: Visual Studio 2017
 init:
 - ps: >-
