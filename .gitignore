@@ -287,6 +287,9 @@ __pycache__/
 *.odx.cs
 *.xsd.cs
 
+#OpenCoverage report
+*Coverage.xml
+
 # HttpWebRequestWrapper reassembled dlldata
 src/*.dll
 src/*.xml
