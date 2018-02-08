@@ -44,7 +44,18 @@ namespace HttpWebRequestWrapper
         }
 
         /// <inheritdoc />
+        public override WebResponse EndGetResponse(IAsyncResult asyncResult)
+        {
+            return RecordRequestAndResponse(() => (HttpWebResponse)base.EndGetResponse(asyncResult));
+        }
+
+        /// <inheritdoc />
         public override WebResponse GetResponse()
+        {
+            return RecordRequestAndResponse(() => (HttpWebResponse)base.GetResponse());
+        }
+
+        private HttpWebResponse RecordRequestAndResponse(Func<HttpWebResponse> getResponse)
         {
             // record the request
             var recordedRequest = new RecordedRequest
@@ -58,7 +69,7 @@ namespace HttpWebRequestWrapper
             
             RecordedRequests.Add(recordedRequest);
             
-            var response = (HttpWebResponse)base.GetResponse();
+            var response = getResponse();
 
             recordedRequest.ResponseHeaders = new NameValueCollection(response.Headers);
             recordedRequest.ResponseStatusCode = response.StatusCode;

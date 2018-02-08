@@ -19,11 +19,19 @@ namespace HttpWebRequestWrapper.Playback
         /// </summary>
         public string Url { get; set; }
         /// <summary>
-        /// 
+        ///
         /// </summary>
         public CookieContainer RequestCookieContainer { get; set; }
         /// <summary>
-        /// 
+        /// <para />
+        /// NOTE: From MS Documentation: 
+        /// https://msdn.microsoft.com/en-us/library/system.net.httpwebrequest.headers%28v=vs.110%29.aspx
+        ///     You should not assume that the header values will remain unchanged, 
+        ///     because Web servers and caches may change or add headers to a Web request.
+        /// <para />
+        /// <see cref="RequestHeaders"/> are recorded *before* <see cref="HttpWebRequest.GetResponse"/>
+        /// is called, so this might not be the same as <see cref="HttpWebRequest.Headers"/>
+        /// after calling <see cref="HttpWebRequest.GetResponse"/> 
         /// </summary>
         public NameValueCollection RequestHeaders { get; set; } = new NameValueCollection();
         /// <summary>
