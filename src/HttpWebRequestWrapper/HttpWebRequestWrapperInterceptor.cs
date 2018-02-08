@@ -1,28 +1,12 @@
 ﻿using System;
-using System.Collections.Specialized;
 using System.IO;
 using System.Net;
 using System.Reflection;
-using System.Text;
 using System.Threading;
 using HttpWebRequestWrapper.IO;
 
 namespace HttpWebRequestWrapper
 {
-    internal class DummyAsyncResult : IAsyncResult
-    {
-        public DummyAsyncResult(WaitHandle waitHandle, object state)
-        {
-            AsyncWaitHandle = waitHandle;
-            AsyncState = state;
-        }
-
-        public WaitHandle AsyncWaitHandle { get; } 
-        public object AsyncState { get; }
-        public bool CompletedSynchronously => true;
-        public bool IsCompleted => true; 
-    }
-
     /// <summary>
     /// 
     /// </summary>
@@ -78,6 +62,8 @@ namespace HttpWebRequestWrapper
 
             // wire up cookies - static void CookieModule.OnReceivedHeaders(HttpWebRequest)
             var cookieModuleType = typeof(HttpWebRequest).Assembly.GetType("System.Net.CookieModule");
+
+            // ReSharper disable once PossibleNullReferenceException
             cookieModuleType
                 .GetMethod("OnReceivedHeaders", BindingFlags.Static | BindingFlags.NonPublic)
                 .Invoke(null, new object[] {this});
@@ -121,89 +107,17 @@ namespace HttpWebRequestWrapper
         public HttpWebResponseInterceptorCreator HttpWebResponseCreator { get; set; }
     }
 
-    /// <summary>
-    /// 
-    /// </summary>
-    public class FakeHttpWebResponseBuilder
+    internal class DummyAsyncResult : IAsyncResult
     {
-        /// <summary>
-        /// 
-        /// </summary>
-        public string ResponseBody { get; set; }
-        /// <summary>
-        /// 
-        /// </summary>
-        public CookieCollection ResponseCookies { get; set; }
-        /// <summary>
-        /// 
-        /// </summary>
-        public NameValueCollection ResponseHeaders { get; set; }
-        /// <summary>
-        /// 
-        /// </summary>
-        public Stream ResponseStream { get; set; }
-        /// <summary>
-        /// 
-        /// </summary>
-        public HttpStatusCode ResponseStatusCode {get; set; }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="responseBody"></param>
-        public static implicit operator FakeHttpWebResponseBuilder(string responseBody)
+        public DummyAsyncResult(WaitHandle waitHandle, object state)
         {
-            return new FakeHttpWebResponseBuilder
-            {
-                ResponseBody = responseBody,
-                ResponseStatusCode = HttpStatusCode.Accepted
-            };
-        }
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    public class FakeHttpWebResponse : WebResponse
-    {
-        private readonly Stream _responseStream;
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="uri"></param>
-        /// <param name="responseBuilder"></param>
-        public FakeHttpWebResponse(Uri uri, FakeHttpWebResponseBuilder responseBuilder)
-        {
-            _responseStream = responseBuilder.ResponseStream;
-
-            if (null == _responseStream)
-            {
-                var responseBytes = Encoding.UTF8.GetBytes(responseBuilder.ResponseBody ?? "");
-
-                _responseStream = new MemoryStream(responseBytes);
-            }
-
-            if (null != responseBuilder.ResponseHeaders)
-                Headers = new WebHeaderCollection { responseBuilder.ResponseHeaders };
-            
-
-            ContentLength = _responseStream.Length;
-            ContentType = "Fake";
-            ResponseUri = uri;
+            AsyncWaitHandle = waitHandle;
+            AsyncState = state;
         }
 
-        /// <inheritdoc/>
-        public override void Close() => _responseStream.Close();
-        /// <inheritdoc/>
-        public override long ContentLength { get; set; }
-        /// <inheritdoc/>
-        public override string ContentType { get; set; }
-        /// <inheritdoc/>
-        public override Stream GetResponseStream() => _responseStream;
-        /// <inheritdoc/>
-        public override WebHeaderCollection Headers { get; }
-        /// <inheritdoc/>
-        public override Uri ResponseUri { get; }
+        public WaitHandle AsyncWaitHandle { get; } 
+        public object AsyncState { get; }
+        public bool CompletedSynchronously => true;
+        public bool IsCompleted => true; 
     }
 }
