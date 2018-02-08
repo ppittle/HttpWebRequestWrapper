@@ -16,15 +16,15 @@
     <tags>HttpWebRequestWrapper, HttpWebRequest, WebClient, mock, test, fake, stub</tags>
   </metadata>
   <files>
-	<file src=".\bin\$configuration$\HttpWebRequestWrapper.LowLevel.dll" target="lib/net20" />
-	<file src=".\bin\$configuration$\HttpWebRequestWrapper.LowLevel.xml" target="lib/net20" />	
-	<file src=".\bin\$configuration$\HttpWebRequestWrapper.LowLevel.dll" target="lib/net35" />
-	<file src=".\bin\$configuration$\HttpWebRequestWrapper.LowLevel.xml" target="lib/net35" />	
-	<file src=".\bin\$configuration$\HttpWebRequestWrapper.LowLevel.dll" target="lib/net40" />
-	<file src=".\bin\$configuration$\HttpWebRequestWrapper.LowLevel.xml" target="lib/net40" />	
-	<file src=".\bin\$configuration$\HttpWebRequestWrapper.dll" target="lib/net35" />
-	<file src=".\bin\$configuration$\HttpWebRequestWrapper.xml" target="lib/net35" />
-	<file src=".\bin\$configuration$\HttpWebRequestWrapper.dll" target="lib/net40" />
-	<file src=".\bin\$configuration$\HttpWebRequestWrapper.xml" target="lib/net40" />
+	<file src=".\bin\$configuration$\HttpWebRequestWrapper.LowLevel.dll" target="lib\net20" />
+	<file src=".\bin\$configuration$\HttpWebRequestWrapper.LowLevel.xml" target="lib\net20" />	
+	<file src=".\bin\$configuration$\HttpWebRequestWrapper.LowLevel.dll" target="lib\net35" />
+	<file src=".\bin\$configuration$\HttpWebRequestWrapper.LowLevel.xml" target="lib\net35" />	
+	<file src=".\bin\$configuration$\HttpWebRequestWrapper.LowLevel.dll" target="lib\net40" />
+	<file src=".\bin\$configuration$\HttpWebRequestWrapper.LowLevel.xml" target="lib\net40" />	
+	<file src=".\bin\$configuration$\HttpWebRequestWrapper.dll" target="lib\net35" />
+	<file src=".\bin\$configuration$\HttpWebRequestWrapper.xml" target="lib\net35" />
+	<file src=".\bin\$configuration$\HttpWebRequestWrapper.dll" target="lib\net40" />
+	<file src=".\bin\$configuration$\HttpWebRequestWrapper.xml" target="lib\net40" />
   </files>
 </package>
