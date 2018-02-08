@@ -1,0 +1,39 @@
+version: 0.2.{build}
+image: Visual Studio 2017
+init:
+- ps: >-
+    $env:customnugetversion = if ($env:APPVEYOR_REPO_BRANCH -eq "master") { "$env:APPVEYOR_BUILD_VERSION" } else { "$env:APPVEYOR_BUILD_VERSION-$env:APPVEYOR_REPO_BRANCH" }
+
+    Update-AppveyorBuild -Version $env:customnugetversion
+configuration: Release
+assembly_info:
+  patch: true
+  file: '**\AssemblyInfo.*'
+  assembly_version: '{version}'
+  assembly_file_version: '{version}'
+  assembly_informational_version: '{version}'
+environment:
+  COVERALLS_REPO_TOKEN: 
+    secure: 2lQ02I3jiTTAixLH7almSAN6JiniXQJIZ
+nuget:
+  disable_publish_on_pr: true
+before_build:
+- cmd: nuget restore .\src
+build:
+  project: ./src/HttpWebRequestWrapper.sln
+  publish_nuget: true
+  publish_nuget_symbols: true
+  verbosity: minimal
+test_script:
+- ps: >-
+    .\src\packages\OpenCover.4.6.519\tools\OpenCover.Console.exe -register:user -target:"xunit.console.clr4.exe"  "-targetargs:""src\HttpWebRequestWrapper.Tests\bin\$env:CONFIGURATION\HttpWebRequestWrapper.Tests.dll"" /noshadow /appveyor" -filter:"+[HttpWebRequestWrapper*]*" -output:opencoverCoverage.xml
+
+    $coveralls = (Resolve-Path "src/packages/coveralls.net.*/tools/csmacnz.coveralls.exe").ToString()
+
+    & $coveralls --opencover -i opencoverCoverage.xml --repoToken $env:COVERALLS_REPO_TOKEN --commitId $env:APPVEYOR_REPO_COMMIT --commitBranch $env:APPVEYOR_REPO_BRANCH --commitAuthor $env:APPVEYOR_REPO_COMMIT_AUTHOR --commitEmail $env:APPVEYOR_REPO_COMMIT_AUTHOR_EMAIL --commitMessage $env:APPVEYOR_REPO_COMMIT_MESSAGE --jobId $env:APPVEYOR_JOB_ID
+deploy:
+- provider: NuGet
+  api_key:
+    secure: GFJOMruKIIVHClOL1KSqa3cnO9qlXbUPzYW2g3xBtohr+rEBP4bqVUweaNg21nH5
+  on:
+    branch: /(master|develop)/
