@@ -20,8 +20,8 @@ before_build:
 - cmd: nuget restore .\src
 build:
   project: ./src/HttpWebRequestWrapper.sln
-  publish_nuget: false
-  publish_nuget_symbols: false
+  publish_nuget: true
+  publish_nuget_symbols: true
   verbosity: minimal
 test_script:
 - ps: >-
