@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Net;
 
 namespace HttpWebRequestWrapper
@@ -6,6 +7,7 @@ namespace HttpWebRequestWrapper
     /// <summary>
     /// 
     /// </summary>
+    [DebuggerDisplay("{HttpWebRequest.Method} {HttpWebRequest.RequestUri}")]
     public class InterceptedRequest
     {
         /// <summary>

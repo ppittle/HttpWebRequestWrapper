@@ -7,11 +7,11 @@ using System.Threading;
 using Should;
 using Xunit;
 
-
 // Justification: Test Class
 // ReSharper disable PossibleNullReferenceException
 // ReSharper disable AssignNullToNotNullAttribute
 // ReSharper disable ConvertToConstant.Local
+// ReSharper disable ExpressionIsAlwaysNull
 
 namespace HttpWebRequestWrapper.Tests
 {
@@ -102,6 +102,25 @@ namespace HttpWebRequestWrapper.Tests
             // ASSERT
             using (var sr = new StreamReader(response.GetResponseStream()))
                 sr.ReadToEnd().ShouldEqual(fakeResponseBody);
+        }
+        
+        [Fact]
+        public void CanSpoofResponseWithNullText()
+        {
+            // ARRANGE
+
+            // just make sure this doesn't throw an exception
+            string fakeResponseBody = null;
+
+            var creator = new HttpWebRequestWrapperInterceptorCreator(req => req.HttpWebResponseCreator.Create(fakeResponseBody));
+            var request = creator.Create(new Uri("http://fakeSite.fake"));
+
+            // ACT
+            var response = request.GetResponse();
+
+            // ASSERT
+            using (var sr = new StreamReader(response.GetResponseStream()))
+                sr.ReadToEnd().ShouldEqual(string.Empty);
         }
 
         [Fact]

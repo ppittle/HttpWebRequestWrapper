@@ -28,7 +28,8 @@ namespace HttpWebRequestWrapper
             _responseCreator = interceptorRequestBuilder.BuildResponse;
         }
 
-        WebRequest IWebRequestCreate.Create(Uri uri)
+        /// <inheritdoc />
+        public WebRequest Create(Uri uri)
         {
             return new HttpWebRequestWrapperInterceptor(uri, _responseCreator);
         }

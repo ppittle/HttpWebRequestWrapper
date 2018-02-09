@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using HttpWebRequestWrapper.Extensions;
 
 // Justification: Public Api
 // ReSharper disable MemberCanBePrivate.Global
@@ -106,8 +107,8 @@ namespace HttpWebRequestWrapper
 
             var urlMatches =
                 string.Equals(
-                    interceptedRequest.HttpWebRequest.RequestUri?.ToString() ?? "",
-                    recordedRequest.Url,
+                    interceptedRequest.HttpWebRequest.RequestUri?.ToString().RemoveTrailingSlash() ?? "",
+                    recordedRequest.Url?.RemoveTrailingSlash(),
                     StringComparison.InvariantCultureIgnoreCase);
 
             var methodMatches = 
@@ -125,7 +126,7 @@ namespace HttpWebRequestWrapper
             var requestHeadersMatch =
 
                 //either both have headers and each one matches (though ordering doesn't matter)
-                interceptedRequest.HttpWebRequest?.Headers.Count > 1 &&
+                interceptedRequest.HttpWebRequest?.Headers.Count > 0 &&
                 interceptedRequest.HttpWebRequest.Headers.Count == recordedRequest?.RequestHeaders.Count &&
                 recordedRequest.RequestHeaders.AllKeys.All(k =>
                     string.Equals(
@@ -152,7 +153,7 @@ namespace HttpWebRequestWrapper
             var headers = new WebHeaderCollection();
 
             if (null != recordedRequest.ResponseHeaders)
-                headers.Add(recordedRequest.RequestHeaders);
+                headers.Add(recordedRequest.ResponseHeaders);
 
             return interceptedRequest.HttpWebResponseCreator.Create(
                 recordedRequest.Response,

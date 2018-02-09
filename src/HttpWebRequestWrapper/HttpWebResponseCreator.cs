@@ -153,6 +153,9 @@ namespace HttpWebRequestWrapper
             string responseBody,
             WebHeaderCollection responseHeaders = null)
         {
+            // allow responseBody to be null - but change to empty string
+            responseBody = responseBody ?? string.Empty;
+
             var responseStream = new MemoryStream(Encoding.UTF8.GetBytes(responseBody));
             responseHeaders = responseHeaders ?? new WebHeaderCollection();
 
