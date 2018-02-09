@@ -613,5 +613,29 @@ namespace HttpWebRequestWrapper.Tests
             response.Headers.AllKeys.ShouldNotBeEmpty();
             response.ProtocolVersion.Minor.ShouldEqual(0);
         }
+
+        // WARNING!! Makes live requests
+        [Fact]
+        public void CanShortCircuitInterceptionWithPassThrough()
+        {
+            // ARRANGE
+            var request = new HttpWebRequestWrapperInterceptor(
+                new Uri("http://www.github.com"),
+                responseCreator => responseCreator.PassThroughResponse())
+            {
+                CookieContainer = new CookieContainer()
+            };
+
+            // ACT
+            var response = (HttpWebResponse)request.GetResponse();
+
+            // ASSERT
+            response.ShouldNotBeNull();
+
+            using(var sr = new StreamReader(response.GetResponseStream()))
+                sr.ReadToEnd().ShouldContain("<html");
+
+            response.Cookies.Count.ShouldBeGreaterThan(0);
+        }
     }
 }
