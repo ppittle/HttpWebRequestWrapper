@@ -56,6 +56,7 @@
     <Compile Include="HttpWebResponseCreator.cs" />
     <Compile Include="IO\MemoryStreamExtensions.cs" />
     <Compile Include="Playback\RecordedRequest.cs" />
+    <Compile Include="Playback\RecordingSession.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="IO\ShadowCopyStream.cs" />
   </ItemGroup>

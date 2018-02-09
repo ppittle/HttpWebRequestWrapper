@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Net;
-using System.Text;
 using HttpWebRequestWrapper.IO;
 using HttpWebRequestWrapper.Playback;
 
@@ -23,6 +22,15 @@ namespace HttpWebRequestWrapper
         /// 
         /// </summary>
         public HttpWebRequestWrapperRecorder(Uri uri) : base(uri){}
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public HttpWebRequestWrapperRecorder(RecordingSession recordingSession, Uri uri)
+            : this(uri)
+        {
+            RecordedRequests = recordingSession.RecordedRequests;
+        }
 
         private ShadowCopyStream _shadowCopyRequestStream;
         /// <inheritdoc />

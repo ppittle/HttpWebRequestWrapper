@@ -308,9 +308,32 @@ namespace HttpWebRequestWrapper.Tests
 
         // WARNING!! Makes live requests
         [Fact]
-        public void CanRecordMultipleRequests()
+        public async Task CanRecordMultipleRequests()
         {
-            throw new NotImplementedException();
+            // ARRANGE
+            var creator1 = new HttpWebRequestWrapperRecorderCreator();
+            var creator2 = new HttpWebRequestWrapperRecorderCreator();
+
+            // ACT
+            await Task.WhenAll(
+                creator1.Create(new Uri("http://www.github.com")).GetResponseAsync(),
+                creator1.Create(new Uri("http://www.appveyor.com")).GetResponseAsync(),
+
+                // use a 2nd creator to make sure there isn't cross talk
+                creator2.Create(new Uri("http://www.stackoverflow.com")).GetResponseAsync());
+
+            // ASSERT
+            creator1.RecordingSession.RecordedRequests.Count.ShouldEqual(2);
+
+            creator1.RecordingSession.RecordedRequests[0].Url.ShouldContain("github");
+            creator1.RecordingSession.RecordedRequests[0].Response.ShouldContain("<html");
+
+            creator1.RecordingSession.RecordedRequests[1].Url.ShouldContain("appveyor");
+            creator1.RecordingSession.RecordedRequests[1].Response.ShouldContain("<html");
+
+            creator2.RecordingSession.RecordedRequests.Count.ShouldEqual(1);
+            creator2.RecordingSession.RecordedRequests[0].Url.ShouldContain("stackoverflow");
+            creator2.RecordingSession.RecordedRequests[0].Response.ShouldContain("<html");
         }
         
         void IUseFixture<GitHubHomePageRequestFixture>.SetFixture(GitHubHomePageRequestFixture data)
