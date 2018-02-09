@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Net;
 
-namespace HttpWebRequestWrapper.Playback
+namespace HttpWebRequestWrapper
 {
     /// <summary>
     /// 
@@ -43,7 +43,7 @@ namespace HttpWebRequestWrapper.Playback
         /// </summary>
         public string Response { get; set; }
         /// <summary>
-        /// 
+        /// TODO - delete.  Headers will contain cookies
         /// </summary>
         public CookieCollection ResponseCookies { get; set; }
         /// <summary>

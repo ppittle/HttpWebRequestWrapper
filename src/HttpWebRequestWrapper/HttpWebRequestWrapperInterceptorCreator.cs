@@ -19,6 +19,15 @@ namespace HttpWebRequestWrapper
             _responseCreator = responseCreator;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="interceptorRequestBuilder"></param>
+        public HttpWebRequestWrapperInterceptorCreator(IInterceptorRequestBuilder interceptorRequestBuilder)
+        {
+            _responseCreator = interceptorRequestBuilder.BuildResponse;
+        }
+
         WebRequest IWebRequestCreate.Create(Uri uri)
         {
             return new HttpWebRequestWrapperInterceptor(uri, _responseCreator);
