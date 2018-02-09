@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Net;
-using HttpWebRequestWrapper.Playback;
 
 namespace HttpWebRequestWrapper
 {

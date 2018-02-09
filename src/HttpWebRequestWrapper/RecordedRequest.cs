@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Net;
 
-namespace HttpWebRequestWrapper.Playback
+namespace HttpWebRequestWrapper
 {
     /// <summary>
     /// 
@@ -42,10 +42,6 @@ namespace HttpWebRequestWrapper.Playback
         /// 
         /// </summary>
         public string Response { get; set; }
-        /// <summary>
-        /// 
-        /// </summary>
-        public CookieCollection ResponseCookies { get; set; }
         /// <summary>
         /// 
         /// </summary>

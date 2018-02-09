@@ -48,14 +48,27 @@ namespace HttpWebRequestWrapper
         /// <inheritdoc />
         public override WebResponse GetResponse()
         {
+            HttpWebResponse passThroughShadowCopy = null;
             var interceptedRequest = new InterceptedRequest
             {
                 RequestPayload = _requestStream.ReadToEnd(),
                 HttpWebRequest = this,
-                HttpWebResponseCreator = new HttpWebResponseInterceptorCreator(RequestUri, Method)
+                HttpWebResponseCreator = new HttpWebResponseInterceptorCreator(RequestUri, Method),
+                PassThroughResponse = () =>
+                {
+                    // save the pass through so we'll know if _responseCreator
+                    // returned that to us - if so we don't want to try and 
+                    // perform any initialization
+                    passThroughShadowCopy = (HttpWebResponse) base.GetResponse();
+                    return passThroughShadowCopy;
+                }
             };
 
             var response = _responseCreator(interceptedRequest);
+
+            if (response == passThroughShadowCopy)
+                // short circuit
+                return passThroughShadowCopy;
 
             // set response to HttpWebRequest's internal field
             ReflectionExtensions.SetField(this, "_HttpResponse", response);
@@ -86,25 +99,6 @@ namespace HttpWebRequestWrapper
         {
             return GetResponse();
         }
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    public class InterceptedRequest
-    {
-        /// <summary>
-        /// 
-        /// </summary>
-        public string RequestPayload { get; set; }
-        /// <summary>
-        /// 
-        /// </summary>
-        public HttpWebRequestWrapperInterceptor HttpWebRequest{get; set; }
-        /// <summary>
-        /// 
-        /// </summary>
-        public HttpWebResponseInterceptorCreator HttpWebResponseCreator { get; set; }
     }
 
     internal class DummyAsyncResult : IAsyncResult

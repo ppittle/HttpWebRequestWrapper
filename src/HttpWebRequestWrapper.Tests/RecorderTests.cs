@@ -4,7 +4,6 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using HttpWebRequestWrapper.Playback;
 using Should;
 using Xunit;
 
@@ -116,8 +115,9 @@ namespace HttpWebRequestWrapper.Tests
             _data.RealRequest.Headers.Count.ShouldBeGreaterThan(0);
 
             // The framework changes HttpWebREQUEST.Headers after a GetResponse() call,
-            // so can't do a direct comparison here. Just verify the count is the same
-            _data.RecorderRecording.RequestHeaders.Count.ShouldEqual(_data.RealRequest.Headers.Count);
+            // so can't do a direct comparison here. just verify the recording at least has some 
+            // request headers
+            _data.RecorderRecording.RequestHeaders.Count.ShouldBeGreaterThan(0);
         }
 
         [Fact]
@@ -176,6 +176,9 @@ namespace HttpWebRequestWrapper.Tests
             _data.RecorderRequest.CookieContainer.Count.ShouldNotEqual(0);
 
             _data.RecorderRecording.RequestCookieContainer.Count.ShouldEqual(_data.RecorderRequest.CookieContainer.Count);
+
+            _data.RecorderRecording.RequestHeaders.AllKeys.ShouldContain("Cookie");
+            
         }
 
         [Fact]
@@ -207,7 +210,12 @@ namespace HttpWebRequestWrapper.Tests
         {
             _data.RecorderResponse.Cookies.Count.ShouldNotEqual(0);
 
-            _data.RecorderRecording.ResponseCookies.Count.ShouldEqual(_data.RecorderResponse.Cookies.Count);
+            _data.RecorderRecording.ResponseHeaders.AllKeys.ShouldContain("Set-Cookie");
+
+            var recordedResponseCookiesRaw = _data.RecorderRecording.ResponseHeaders["Set-Cookie"];
+
+            // github sends back a logged_in=no cookie - hopefully that's stable
+            recordedResponseCookiesRaw.ShouldContain("logged_in=no");
         }
 
         [Fact]

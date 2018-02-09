@@ -48,17 +48,21 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="HttpWebRequestWrapperInterceptor.cs" />
     <Compile Include="HttpWebRequestWrapperInterceptorCreator.cs" />
     <Compile Include="HttpWebRequestWrapperRecorder.cs" />
     <Compile Include="HttpWebRequestWrapperRecorderCreator.cs" />
     <Compile Include="HttpWebRequestWrapperSession.cs" />
     <Compile Include="HttpWebResponseCreator.cs" />
+    <Compile Include="IInterceptorRequestBuilder.cs" />
+    <Compile Include="InterceptedRequest.cs" />
     <Compile Include="IO\MemoryStreamExtensions.cs" />
-    <Compile Include="Playback\RecordedRequest.cs" />
-    <Compile Include="Playback\RecordingSession.cs" />
+    <Compile Include="RecordedRequest.cs" />
+    <Compile Include="RecordingSession.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="IO\ShadowCopyStream.cs" />
+    <Compile Include="RecordingSessionInterceptorRequestBuilder.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

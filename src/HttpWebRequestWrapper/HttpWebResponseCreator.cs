@@ -5,7 +5,15 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Text;
+
+// Justification: PublicApi
+// ReSharper disable UnusedMember.Global
+
+// Justification: Improves readability
 // ReSharper disable RedundantIfElseBlock
+
+// Justification: Reflection calls
+// ReSharper disable once PossibleNullReferenceException
 
 namespace HttpWebRequestWrapper
 {
@@ -145,6 +153,9 @@ namespace HttpWebRequestWrapper
             string responseBody,
             WebHeaderCollection responseHeaders = null)
         {
+            // allow responseBody to be null - but change to empty string
+            responseBody = responseBody ?? string.Empty;
+
             var responseStream = new MemoryStream(Encoding.UTF8.GetBytes(responseBody));
             responseHeaders = responseHeaders ?? new WebHeaderCollection();
 
@@ -206,7 +217,7 @@ namespace HttpWebRequestWrapper
             var constructor =
                 typeof(HttpWebResponse)
                     .GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic)
-                    .First(c => c.GetParameters().Count() >= 6);
+                    .First(c => c.GetParameters().Length >= 6);
 
             if (constructor.GetParameters().Length == 6)
             {
@@ -220,7 +231,7 @@ namespace HttpWebRequestWrapper
                     //DecompressionMethods decompressionMethod) 
 
                 return (HttpWebResponse)
-                    constructor.Invoke(new object[]
+                    constructor.Invoke(new []
                     {
                         responseUri,
                         knownHttpVerb,
@@ -244,7 +255,7 @@ namespace HttpWebRequestWrapper
                     //string connectionGroupName)
 
                 return (HttpWebResponse)
-                    constructor.Invoke(new object[]
+                    constructor.Invoke(new []
                     {
                         responseUri,
                         knownHttpVerb,

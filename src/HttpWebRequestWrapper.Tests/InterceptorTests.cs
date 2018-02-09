@@ -7,11 +7,11 @@ using System.Threading;
 using Should;
 using Xunit;
 
-
 // Justification: Test Class
 // ReSharper disable PossibleNullReferenceException
 // ReSharper disable AssignNullToNotNullAttribute
 // ReSharper disable ConvertToConstant.Local
+// ReSharper disable ExpressionIsAlwaysNull
 
 namespace HttpWebRequestWrapper.Tests
 {
@@ -102,6 +102,25 @@ namespace HttpWebRequestWrapper.Tests
             // ASSERT
             using (var sr = new StreamReader(response.GetResponseStream()))
                 sr.ReadToEnd().ShouldEqual(fakeResponseBody);
+        }
+        
+        [Fact]
+        public void CanSpoofResponseWithNullText()
+        {
+            // ARRANGE
+
+            // just make sure this doesn't throw an exception
+            string fakeResponseBody = null;
+
+            var creator = new HttpWebRequestWrapperInterceptorCreator(req => req.HttpWebResponseCreator.Create(fakeResponseBody));
+            var request = creator.Create(new Uri("http://fakeSite.fake"));
+
+            // ACT
+            var response = request.GetResponse();
+
+            // ASSERT
+            using (var sr = new StreamReader(response.GetResponseStream()))
+                sr.ReadToEnd().ShouldEqual(string.Empty);
         }
 
         [Fact]
@@ -612,6 +631,30 @@ namespace HttpWebRequestWrapper.Tests
             response.StatusCode.ShouldNotEqual(HttpStatusCode.Accepted);
             response.Headers.AllKeys.ShouldNotBeEmpty();
             response.ProtocolVersion.Minor.ShouldEqual(0);
+        }
+
+        // WARNING!! Makes live requests
+        [Fact]
+        public void CanShortCircuitInterceptionWithPassThrough()
+        {
+            // ARRANGE
+            var request = new HttpWebRequestWrapperInterceptor(
+                new Uri("http://www.github.com"),
+                responseCreator => responseCreator.PassThroughResponse())
+            {
+                CookieContainer = new CookieContainer()
+            };
+
+            // ACT
+            var response = (HttpWebResponse)request.GetResponse();
+
+            // ASSERT
+            response.ShouldNotBeNull();
+
+            using(var sr = new StreamReader(response.GetResponseStream()))
+                sr.ReadToEnd().ShouldContain("<html");
+
+            response.Cookies.Count.ShouldBeGreaterThan(0);
         }
     }
 }

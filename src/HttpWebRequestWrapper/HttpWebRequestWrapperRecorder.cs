@@ -4,7 +4,9 @@ using System.Collections.Specialized;
 using System.IO;
 using System.Net;
 using HttpWebRequestWrapper.IO;
-using HttpWebRequestWrapper.Playback;
+
+// Justification: Improves readability
+// ReSharper disable ConvertIfStatementToNullCoalescingExpression
 
 namespace HttpWebRequestWrapper
 {
@@ -70,7 +72,7 @@ namespace HttpWebRequestWrapper
             {
                 Url = RequestUri.ToString(),
                 Method = Method,
-                RequestCookieContainer = base.CookieContainer,
+                RequestCookieContainer = CookieContainer,
                 RequestHeaders = new NameValueCollection(Headers),
                 RequestPayload = _shadowCopyRequestStream.ReadToEnd()
             };
@@ -81,7 +83,6 @@ namespace HttpWebRequestWrapper
 
             recordedRequest.ResponseHeaders = new NameValueCollection(response.Headers);
             recordedRequest.ResponseStatusCode = response.StatusCode;
-            recordedRequest.ResponseCookies = response.Cookies;
 
             // copy the response stream
             try
