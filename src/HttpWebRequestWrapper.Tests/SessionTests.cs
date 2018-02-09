@@ -81,6 +81,9 @@ namespace HttpWebRequestWrapper.Tests
         {
             // ARRANGE
             var mockWebRequest = new Mock<HttpWebRequestWrapper>(new Uri("http://fakeSite.fake"));
+            mockWebRequest
+                .Setup(x => x.GetResponse())
+                .Throws(new Exception("This test should not be making a real request"));
 
             var mockCreator = new Mock<IWebRequestCreate>();
             mockCreator
