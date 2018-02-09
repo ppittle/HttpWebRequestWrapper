@@ -79,14 +79,12 @@ namespace HttpWebRequestWrapper.IO
             if (shadowCopyStream.ShadowCopy.Length == 0)
                 return string.Empty;
 
-
             try
             {
                 shadowCopyStream.ShadowCopy.Seek(0, SeekOrigin.Begin);
 
                 using (var sr = new StreamReader(shadowCopyStream.ShadowCopy, Encoding.UTF8))
                    return sr.ReadToEnd();
-                
             }
             catch (Exception e)
             {

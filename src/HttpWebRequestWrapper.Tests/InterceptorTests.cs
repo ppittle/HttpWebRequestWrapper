@@ -34,6 +34,25 @@ namespace HttpWebRequestWrapper.Tests
             response.ShouldBeType<HttpWebResponse>();
         }
 
+        [Fact]
+        public void CanInterceptHttpsRequest()
+        {
+            // ARRANGE
+            var fakeResponseBody = "Test";
+
+            IWebRequestCreate creator = new HttpWebRequestWrapperInterceptorCreator(req => req.HttpWebResponseCreator.Create(fakeResponseBody));
+            var request = creator.Create(new Uri("https://fakeSite.fake"));
+
+            // ACT
+            var response = request.GetResponse();
+
+            // ASSERT
+            response.ShouldBeType<HttpWebResponse>();
+
+            using (var sr = new StreamReader(response.GetResponseStream()))
+                sr.ReadToEnd().ShouldEqual(fakeResponseBody);
+        }
+
         /// <summary>
         /// Verify <see cref="InterceptedRequest.RequestPayload"/> is 
         /// set correctly by <see cref="HttpWebRequestWrapperInterceptor"/> so
@@ -217,8 +236,8 @@ namespace HttpWebRequestWrapper.Tests
             var fakeUrl1 = new Uri("http://fakeSite.fake/1");
             var fakeResponse1 = "fakeResponse1";
 
-            var fakeUrl2 = new Uri("http://fakeSite.fake/1");
-            var fakeResponse2 = "fakeResponse1";
+            var fakeUrl2 = new Uri("http://fakeSite.fake/2");
+            var fakeResponse2 = "fakeResponse2";
 
             var responseCreator = new Func<InterceptedRequest, HttpWebResponse>(req =>
             {
@@ -552,8 +571,6 @@ namespace HttpWebRequestWrapper.Tests
             using (var sr = new StreamReader(response.GetResponseStream()))
                 sr.ReadToEnd().ShouldEqual(responseBody);
         }
-
-        
 
         /// <summary>
         /// Use the most advanced 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using HttpWebRequestWrapper.Playback;
 
 namespace HttpWebRequestWrapper
 {
@@ -8,9 +9,30 @@ namespace HttpWebRequestWrapper
     /// </summary>
     public class HttpWebRequestWrapperRecorderCreator : IWebRequestCreate
     {
-        WebRequest IWebRequestCreate.Create(Uri uri)
+        /// <summary>
+        /// 
+        /// </summary>
+        public RecordingSession RecordingSession { get; set; } 
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public HttpWebRequestWrapperRecorderCreator()
+            :this(new RecordingSession()){}
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="recordingSession"></param>
+        public HttpWebRequestWrapperRecorderCreator(RecordingSession recordingSession)
         {
-            return new HttpWebRequestWrapperRecorder(uri);
+            RecordingSession = recordingSession;
+        }
+
+        /// <inheritdoc/>
+        public WebRequest Create(Uri uri)
+        {
+            return new HttpWebRequestWrapperRecorder(RecordingSession, uri);
         }
     }
 }

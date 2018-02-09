@@ -2,5 +2,6 @@
 [![AppVeyor tests](https://img.shields.io/appveyor/tests/ppittle/httpwebrequestwrapper.svg?logo=appveyor)](https://ci.appveyor.com/project/ppittle/httpwebrequestwrapper/build/tests)
 [![Coverage Status](https://coveralls.io/repos/github/ppittle/HttpWebRequestWrapper/badge.svg)](https://coveralls.io/github/ppittle/HttpWebRequestWrapper)
 [![NuGet](https://img.shields.io/nuget/v/HttpWebRequestWrapper.svg)](https://www.nuget.org/packages/HttpWebRequestWrapper)
+[![NuGet](https://img.shields.io/nuget/dt/HttpWebRequestWrapper.svg)](https://www.nuget.org/packages/HttpWebRequestWrapper)
 
 # HttpWebRequestWrapper
