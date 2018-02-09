@@ -236,8 +236,8 @@ namespace HttpWebRequestWrapper.Tests
             var fakeUrl1 = new Uri("http://fakeSite.fake/1");
             var fakeResponse1 = "fakeResponse1";
 
-            var fakeUrl2 = new Uri("http://fakeSite.fake/1");
-            var fakeResponse2 = "fakeResponse1";
+            var fakeUrl2 = new Uri("http://fakeSite.fake/2");
+            var fakeResponse2 = "fakeResponse2";
 
             var responseCreator = new Func<InterceptedRequest, HttpWebResponse>(req =>
             {
