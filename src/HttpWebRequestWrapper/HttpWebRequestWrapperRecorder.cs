@@ -83,7 +83,6 @@ namespace HttpWebRequestWrapper
 
             recordedRequest.ResponseHeaders = new NameValueCollection(response.Headers);
             recordedRequest.ResponseStatusCode = response.StatusCode;
-            recordedRequest.ResponseCookies = response.Cookies;
 
             // copy the response stream
             try

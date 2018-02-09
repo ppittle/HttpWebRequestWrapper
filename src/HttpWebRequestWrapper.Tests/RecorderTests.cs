@@ -175,6 +175,9 @@ namespace HttpWebRequestWrapper.Tests
             _data.RecorderRequest.CookieContainer.Count.ShouldNotEqual(0);
 
             _data.RecorderRecording.RequestCookieContainer.Count.ShouldEqual(_data.RecorderRequest.CookieContainer.Count);
+
+            _data.RecorderRecording.RequestHeaders.AllKeys.ShouldContain("Cookie");
+            
         }
 
         [Fact]
@@ -206,7 +209,12 @@ namespace HttpWebRequestWrapper.Tests
         {
             _data.RecorderResponse.Cookies.Count.ShouldNotEqual(0);
 
-            _data.RecorderRecording.ResponseCookies.Count.ShouldEqual(_data.RecorderResponse.Cookies.Count);
+            _data.RecorderRecording.ResponseHeaders.AllKeys.ShouldContain("Set-Cookie");
+
+            var recordedResponseCookiesRaw = _data.RecorderRecording.ResponseHeaders["Set-Cookie"];
+
+            // github sends back a logged_in=no cookie - hopefully that's stable
+            recordedResponseCookiesRaw.ShouldContain("logged_in=no");
         }
 
         [Fact]

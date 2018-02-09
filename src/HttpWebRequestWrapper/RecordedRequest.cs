@@ -43,10 +43,6 @@ namespace HttpWebRequestWrapper
         /// </summary>
         public string Response { get; set; }
         /// <summary>
-        /// TODO - delete.  Headers will contain cookies
-        /// </summary>
-        public CookieCollection ResponseCookies { get; set; }
-        /// <summary>
         /// 
         /// </summary>
         public NameValueCollection ResponseHeaders { get; set; } = new NameValueCollection();
