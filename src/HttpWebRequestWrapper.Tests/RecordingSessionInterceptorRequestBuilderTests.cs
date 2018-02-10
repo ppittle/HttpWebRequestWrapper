@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.IO;
+using System.Linq;
 using System.Net;
+using HttpWebRequestWrapper.Tests.Properties;
+using Newtonsoft.Json;
 using Should;
 using Xunit;
 
 // Justification: Test Class
 // ReSharper disable AssignNullToNotNullAttribute
+// ReSharper disable ConvertToConstant.Local
 
 namespace HttpWebRequestWrapper.Tests
 {
@@ -36,7 +39,7 @@ namespace HttpWebRequestWrapper.Tests
             
             // ACT
             var playbackResponse = (HttpWebResponse)playbackRequest.GetResponse();
-
+            
             string liveResponseBody;
             using (var sr = new StreamReader(liveResponse.GetResponseStream()))
                 liveResponseBody = sr.ReadToEnd();
@@ -49,8 +52,7 @@ namespace HttpWebRequestWrapper.Tests
             playbackResponse.StatusCode.ShouldEqual(liveResponse.StatusCode);
             playbackResponseBody.ShouldEqual(liveResponseBody);
 
-            for(var i = 0; i < liveResponse.Headers.Count; i++)
-                playbackResponse.Headers[i].ShouldEqual(liveResponse.Headers[i]);
+            playbackResponse.Headers.ShouldEqual(liveResponse.Headers);
         }
 
         [Fact]
@@ -101,6 +103,91 @@ namespace HttpWebRequestWrapper.Tests
 
             using (var sr = new StreamReader(response2.GetResponseStream()))
                 sr.ReadToEnd().ShouldEqual(recordedRequest2.Response);
+        }
+
+        [Fact]
+        public void CanPlaybackFromSerializedRecordingSession()
+        {
+            // ARRANGE
+
+            // recording session is for github.com
+            var requestUrl = new Uri("http://www.github.com");
+
+            string json;
+            using (var resource = GetType().Assembly.GetManifestResourceStream("HttpWebRequestWrapper.Tests.RecordingSession.json"))
+            using (var sr = new StreamReader(resource))
+                json = sr.ReadToEnd();
+
+            var recordingSession = JsonConvert.DeserializeObject<RecordingSession>(json);
+
+            var creator = new HttpWebRequestWrapperInterceptorCreator(
+                new RecordingSessionInterceptorRequestBuilder(recordingSession));
+
+            var playbackRequest = (HttpWebRequest)creator.Create(requestUrl);
+            playbackRequest.CookieContainer = new CookieContainer();
+
+            // ACT
+            var playbackResponse = (HttpWebResponse)playbackRequest.GetResponse();
+
+            // ASSERT
+            playbackResponse.StatusCode.ShouldEqual(HttpStatusCode.OK);
+            playbackResponse.Headers.Count.ShouldEqual(19);
+            playbackResponse.Cookies.Count.ShouldEqual(2);
+            playbackResponse.Cookies.ToList().First().Name.ShouldEqual("logged_in");
+
+            using (var sr = new StreamReader(playbackResponse.GetResponseStream()))
+                sr.ReadToEnd().ShouldContain("<html");
+        }
+
+        [Fact]
+        public void CanDynamicallyChangeRequestsMidPlayback()
+        {
+            // ARRANGE
+            var requestUrl = "http://www.github.com";
+            var fakeResponse1 = "response1";
+            var fakeResponse2 = "response2";
+            
+            var builder = new RecordingSessionInterceptorRequestBuilder();
+            builder.RecordedRequests.Add(new RecordedRequest
+            {
+                Url = requestUrl,
+                Method = "GET",
+                Response = fakeResponse1
+            });
+
+            using (new HttpWebRequestWrapperSession(new HttpWebRequestWrapperInterceptorCreator(
+                builder)))
+            {
+                // ACT
+                var response1 = WebRequest.Create(requestUrl).GetResponse();
+
+                builder.RecordedRequests.Clear();
+                builder.RecordedRequests.Add(new RecordedRequest
+                {
+                    Url = requestUrl,
+                    Method = "GET",
+                    Response = fakeResponse2
+                });
+
+                var response2 = WebRequest.Create(requestUrl).GetResponse();
+
+                builder.RecordedRequests.Clear();
+
+                var response3 = (HttpWebResponse)WebRequest.Create(requestUrl).GetResponse();
+
+                // ASSERT
+                response1.ShouldNotBeNull();
+                response2.ShouldNotBeNull();
+                response3.ShouldNotBeNull();
+
+                using (var sr = new StreamReader(response1.GetResponseStream()))
+                    sr.ReadToEnd().ShouldEqual(fakeResponse1);
+
+                using (var sr = new StreamReader(response2.GetResponseStream()))
+                    sr.ReadToEnd().ShouldEqual(fakeResponse2);
+
+                response3.StatusCode.ShouldEqual(HttpStatusCode.NotFound);
+            }
         }
 
         [Fact]
@@ -195,7 +282,6 @@ namespace HttpWebRequestWrapper.Tests
             var requestBuilder = new RecordingSessionInterceptorRequestBuilder(recordingSession)
             {
                 MatchingAlgorithm = (interceptedReq, recordedReq) => interceptedReq.HttpWebRequest.RequestUri == requestUrl
-                    
             };
 
             IWebRequestCreate creator = new HttpWebRequestWrapperInterceptorCreator(requestBuilder);
@@ -243,6 +329,99 @@ namespace HttpWebRequestWrapper.Tests
 
             using (var sr = new StreamReader(response.GetResponseStream()))
                 sr.ReadToEnd().ShouldEqual(customResponseBody);
+        }
+
+        [Fact]
+        public void CanSetOnMatchEventHandler()
+        {
+            var matchCallCount = 0;
+
+            var requestUrl = new Uri("http://fakeSite.fake/");
+            var recordedRequest = new RecordedRequest
+            {
+                Url = "http://fakeSite.fake/",
+                Method = "GET",
+                ResponseStatusCode = HttpStatusCode.Found
+            };
+
+            var recordingSession = new RecordingSession{RecordedRequests = new List<RecordedRequest>{recordedRequest}};
+
+            var requestBuilder = new RecordingSessionInterceptorRequestBuilder(recordingSession)
+            {
+                OnMatch = (recordedReq, interceptedReq, httpWebResponse) =>
+                {
+                    recordedReq.ShouldEqual(recordedRequest);
+                    interceptedReq.HttpWebRequest.RequestUri.ShouldEqual(new Uri(recordedRequest.Url));
+                    httpWebResponse.StatusCode.ShouldEqual(recordedRequest.ResponseStatusCode);
+
+                    matchCallCount++;
+                }
+            };
+
+            IWebRequestCreate creator = new HttpWebRequestWrapperInterceptorCreator(requestBuilder);
+
+            var request = creator.Create(requestUrl);
+
+            // ACT
+            var response = request.GetResponse();
+
+            // ASSERT
+            response.ShouldNotBeNull();
+
+            matchCallCount.ShouldEqual(1);
+        }
+
+        [Fact]
+        public void CanSetRecordedRequestsToOnlyMatchOnce()
+        {
+            // ARRANGE
+            var recordedRequest1 = new RecordedRequest
+            {
+                Url = "http://fakeSite.fake/1",
+                Method = "GET",
+                Response = "Response 1"
+            };
+
+            var recordedRequest2 = new RecordedRequest
+            {
+                Url = "http://fakeSite.fake/2",
+                Method = recordedRequest1.Method,
+                Response = "Response 2"
+            };
+            
+            var requestBuilder = new RecordingSessionInterceptorRequestBuilder(
+                new RecordingSession{RecordedRequests = {recordedRequest1, recordedRequest1, recordedRequest2}})
+            {
+                AllowReplayingRecordedRequestsMultipleTimes = false
+            };
+
+            var creator = new HttpWebRequestWrapperInterceptorCreator(requestBuilder);
+
+            // ACT
+            var response1a = (HttpWebResponse)creator.Create(new Uri(recordedRequest1.Url)).GetResponse();
+            var response1b = (HttpWebResponse)creator.Create(new Uri(recordedRequest1.Url)).GetResponse();
+            var response1c = (HttpWebResponse)creator.Create(new Uri(recordedRequest1.Url)).GetResponse();
+            var response2a = (HttpWebResponse)creator.Create(new Uri(recordedRequest2.Url)).GetResponse();
+            var response2b = (HttpWebResponse)creator.Create(new Uri(recordedRequest2.Url)).GetResponse();
+
+            // ASSERT
+            response1a.ShouldNotBeNull();
+            response1b.ShouldNotBeNull();
+            response1c.ShouldNotBeNull();
+            response2a.ShouldNotBeNull();
+            response2b.ShouldNotBeNull();
+
+            using (var sr = new StreamReader(response1a.GetResponseStream()))
+                sr.ReadToEnd().ShouldEqual(recordedRequest1.Response);
+
+            using (var sr = new StreamReader(response1b.GetResponseStream()))
+                sr.ReadToEnd().ShouldEqual(recordedRequest1.Response);
+
+            using (var sr = new StreamReader(response2a.GetResponseStream()))
+                sr.ReadToEnd().ShouldEqual(recordedRequest2.Response);
+
+            response1c.StatusCode.ShouldEqual(HttpStatusCode.NotFound);
+            response2b.StatusCode.ShouldEqual(HttpStatusCode.NotFound);
         }
 
         [Fact]
@@ -399,7 +578,7 @@ namespace HttpWebRequestWrapper.Tests
             {
                 Url = "http://fakeSite.fake",
                 Method = "GET",
-                RequestHeaders = new NameValueCollection{{"Request1", "Request1Value"}},
+                RequestHeaders = new RecordedHeaders{{"Request1", new []{"Request1Value"}}},
                 Response = "Response 1"
             };
 
@@ -407,7 +586,7 @@ namespace HttpWebRequestWrapper.Tests
             {
                 Url = recordedRequest1.Url,
                 Method = recordedRequest1.Method,
-                RequestHeaders = new NameValueCollection{{"Request2", "Request2Value"}},
+                RequestHeaders = new RecordedHeaders{{"Request2", new []{"Request2Value"}}},
                 Response = "Response 2"
             };
             
@@ -504,7 +683,7 @@ namespace HttpWebRequestWrapper.Tests
             {
                 Url = "http://fakeSite.fake",
                 Method = "GET",
-                ResponseHeaders = new NameValueCollection{ {"Header1", "Header1Value"} }
+                ResponseHeaders = new RecordedHeaders{ {"Header1", new []{"Header1Value"}}}
             };
 
             var recordingSession = new RecordingSession{RecordedRequests = new List<RecordedRequest>{recordedRequest}};
@@ -521,8 +700,7 @@ namespace HttpWebRequestWrapper.Tests
             // ASSERT
             response.ShouldNotBeNull();
 
-            for (var i = 0; i < recordedRequest.ResponseHeaders.Count; i++)
-                response.Headers[i].ShouldEqual(recordedRequest.ResponseHeaders[i]);
+            recordedRequest.ResponseHeaders.ShouldEqual((RecordedHeaders)response.Headers);
         }
     }
 }

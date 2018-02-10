@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Net;
 
+// Justification: Public Api
+// ReSharper disable MemberCanBePrivate.Global
+
 namespace HttpWebRequestWrapper
 {
     /// <summary>
