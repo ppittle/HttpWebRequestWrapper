@@ -437,6 +437,7 @@ namespace HttpWebRequestWrapper.Tests
 
             // ASSERT
             response.Method.ShouldEqual(method);
+            response.StatusCode.ShouldEqual(HttpStatusCode.OK);
 
             using (var sr = new StreamReader(response.GetResponseStream()))
                 sr.ReadToEnd().ShouldEqual(responseBody);
