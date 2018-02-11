@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.IO;
 using System.Net;
 using HttpWebRequestWrapper.IO;
@@ -73,7 +72,7 @@ namespace HttpWebRequestWrapper
                 Url = RequestUri.ToString(),
                 Method = Method,
                 RequestCookieContainer = CookieContainer,
-                RequestHeaders = new NameValueCollection(Headers),
+                RequestHeaders = Headers,
                 RequestPayload = _shadowCopyRequestStream.ReadToEnd()
             };
             
@@ -81,7 +80,7 @@ namespace HttpWebRequestWrapper
             
             var response = getResponse();
 
-            recordedRequest.ResponseHeaders = new NameValueCollection(response.Headers);
+            recordedRequest.ResponseHeaders = response.Headers;
             recordedRequest.ResponseStatusCode = response.StatusCode;
 
             // copy the response stream

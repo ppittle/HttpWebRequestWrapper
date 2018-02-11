@@ -1,9 +1,11 @@
 ﻿using System;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading;
+using HttpWebRequestWrapper.Tests.Properties;
 using Should;
 using Xunit;
 
@@ -222,7 +224,9 @@ namespace HttpWebRequestWrapper.Tests
             var response = (HttpWebResponse)request.GetResponse();
 
             // ASSERT
-            response.Cookies.Count.ShouldEqual(1);            
+            response.Cookies.Count.ShouldEqual(1);
+            response.Cookies.ToList().First().Name.ShouldEqual("cookie");
+            response.Cookies.ToList().First().Value.ShouldEqual("true");
         }
 
         [Fact]
@@ -433,6 +437,7 @@ namespace HttpWebRequestWrapper.Tests
 
             // ASSERT
             response.Method.ShouldEqual(method);
+            response.StatusCode.ShouldEqual(HttpStatusCode.OK);
 
             using (var sr = new StreamReader(response.GetResponseStream()))
                 sr.ReadToEnd().ShouldEqual(responseBody);

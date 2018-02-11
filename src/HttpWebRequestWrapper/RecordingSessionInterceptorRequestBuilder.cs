@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Net;
 using HttpWebRequestWrapper.Extensions;
@@ -23,9 +24,16 @@ namespace HttpWebRequestWrapper
     public class RecordingSessionInterceptorRequestBuilder : IInterceptorRequestBuilder
     {
         /// <summary>
-        /// 
+        /// Collection of <see cref="RecordedRequest"/>s used by <see cref="MatchingAlgorithm"/>
+        /// to match an incoming <see cref="InterceptedRequest"/> and build a <see cref="HttpWebResponse"/>.
+        /// <para />
+        /// This is automatically set by the constructors based on the <see cref="RecordingSession"/>s
+        /// that are passed in.  
+        /// <para />
+        /// But you can manipulate this list at any time - helpful if you need dynamic control
+        /// over playback or testing error handling/retry behavior.
         /// </summary>
-        public List<RecordedRequest> RecordedRequests { get; }
+        public List<RecordedRequest> RecordedRequests { get; set; }
 
         #region Constructors
 
@@ -76,10 +84,18 @@ namespace HttpWebRequestWrapper
                 RecordedRequests
                     .FirstOrDefault(recorded => MatchingAlgorithm(intercepted, recorded));
 
-            return
+            var response = 
                 null != matchedRecordedRequest
                     ? RecordedResultResponseBuilder(matchedRecordedRequest, intercepted)
                     : RequestNotFoundResponseBuilder(intercepted);
+
+            OnMatch?.Invoke(matchedRecordedRequest, intercepted, response);
+
+            if (!AllowReplayingRecordedRequestsMultipleTimes &&
+                null != matchedRecordedRequest)
+                RecordedRequests.Remove(matchedRecordedRequest);
+
+            return response;
         }
 
         #region Public Strategy Functions
@@ -95,6 +111,20 @@ namespace HttpWebRequestWrapper
         /// 
         /// </summary>
         public Func<InterceptedRequest, HttpWebResponse> RequestNotFoundResponseBuilder { get; set; }
+        /// <summary>
+        /// Callback fired immediately before returning the <see cref="HttpWebResponse"/>.  Useful
+        /// if you want an auditing hook to verify a specific request was made, debug why a match
+        /// occurred, or build an audit history.
+        /// <para />
+        /// NOTE: the <see cref="RecordedRequests"/> property can be null if no match could
+        /// be found and we needed to use <see cref="RequestNotFoundResponseBuilder"/> to 
+        /// build a response.
+        /// </summary>
+        public Action<RecordedRequest, InterceptedRequest, HttpWebResponse> OnMatch { get; set; }
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool AllowReplayingRecordedRequestsMultipleTimes { get; set; } = true;
         #endregion
 
         #region Private Default Strategy Implementations
@@ -124,20 +154,7 @@ namespace HttpWebRequestWrapper
                     StringComparison.InvariantCultureIgnoreCase);
 
             var requestHeadersMatch =
-
-                //either both have headers and each one matches (though ordering doesn't matter)
-                interceptedRequest.HttpWebRequest?.Headers.Count > 0 &&
-                interceptedRequest.HttpWebRequest.Headers.Count == recordedRequest?.RequestHeaders.Count &&
-                recordedRequest.RequestHeaders.AllKeys.All(k =>
-                    string.Equals(
-                        recordedRequest.RequestHeaders[k],
-                        interceptedRequest.HttpWebRequest.Headers[k]))
-
-                ||
-
-                // or both have no headers
-                interceptedRequest.HttpWebRequest?.Headers.Count == 0 &&
-                recordedRequest?.RequestHeaders?.Count == 0;
+                recordedRequest.RequestHeaders.Equals(interceptedRequest.HttpWebRequest.Headers);
 
             return
                 urlMatches &&
@@ -180,7 +197,7 @@ namespace HttpWebRequestWrapper
                             HttpStatusCode.NotFound);
 
                 default:
-                    throw new NotImplementedException(
+                    throw new InvalidEnumArgumentException(
                         $"Don't know how to handle behavior [{Enum.GetName(typeof(RequestNotFoundBehavior), behavior)}].  " +
                         $"This is a bug in the {nameof(HttpWebRequestWrapper)} library.");
             }

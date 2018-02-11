@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using Should;
 using Xunit;
 
@@ -116,7 +118,7 @@ namespace HttpWebRequestWrapper.Tests
 
             // The framework changes HttpWebREQUEST.Headers after a GetResponse() call,
             // so can't do a direct comparison here. just verify the recording at least has some 
-            // request headers
+            // request headers.  also when run on appveyor the header counts come back different.
             _data.RecorderRecording.RequestHeaders.Count.ShouldBeGreaterThan(0);
         }
 
@@ -143,9 +145,8 @@ namespace HttpWebRequestWrapper.Tests
         public void RecorderResponseHasCorrectResponseHeaders()
         {
             _data.RealResponse.Headers.Count.ShouldNotEqual(0);
-
-            // headers change between requests - so just make sure the count is the same
-            _data.RecorderResponse.Headers.Count.ShouldEqual(_data.RealResponse.Headers.Count);
+            
+            _data.RecorderResponse.Headers.ShouldEqual(_data.RealResponse.Headers);
         }
 
         [Fact]
@@ -177,8 +178,7 @@ namespace HttpWebRequestWrapper.Tests
 
             _data.RecorderRecording.RequestCookieContainer.Count.ShouldEqual(_data.RecorderRequest.CookieContainer.Count);
 
-            _data.RecorderRecording.RequestHeaders.AllKeys.ShouldContain("Cookie");
-            
+            _data.RecorderRecording.RequestHeaders.Keys.ShouldContain("Cookie");
         }
 
         [Fact]
@@ -210,12 +210,11 @@ namespace HttpWebRequestWrapper.Tests
         {
             _data.RecorderResponse.Cookies.Count.ShouldNotEqual(0);
 
-            _data.RecorderRecording.ResponseHeaders.AllKeys.ShouldContain("Set-Cookie");
-
-            var recordedResponseCookiesRaw = _data.RecorderRecording.ResponseHeaders["Set-Cookie"];
-
-            // github sends back a logged_in=no cookie - hopefully that's stable
-            recordedResponseCookiesRaw.ShouldContain("logged_in=no");
+            // make sure we have the Set_Cookie header
+            _data.RecorderRecording.ResponseHeaders.ContainsKey("Set-Cookie").ShouldBeTrue();
+            
+            // github sends back a logged_in cookie - hopefully that's stable
+            _data.RecorderRecording.ResponseHeaders["Set-Cookie"].Any(c => c.Contains("logged_in")).ShouldBeTrue();
         }
 
         [Fact]
@@ -344,6 +343,21 @@ namespace HttpWebRequestWrapper.Tests
             creator2.RecordingSession.RecordedRequests[0].Response.ShouldContain("<html");
         }
         
+        [Fact]
+        public void RecordingSessionCanBeSerialized()
+        {
+            // ACT
+            var json = JsonConvert.SerializeObject(_data.RecorderRequest.RecordedRequests);
+
+            var recordingSession = JsonConvert.DeserializeObject<List<RecordedRequest>>(json);
+
+            // ASSERT
+            json.ShouldNotBeNull();
+            recordingSession.ShouldNotBeNull();
+            recordingSession.Count.ShouldEqual(1);
+            recordingSession[0].Url.ShouldEqual(_data.RecorderRecording.Url);
+        }
+
         void IUseFixture<GitHubHomePageRequestFixture>.SetFixture(GitHubHomePageRequestFixture data)
         {
             _data = data;

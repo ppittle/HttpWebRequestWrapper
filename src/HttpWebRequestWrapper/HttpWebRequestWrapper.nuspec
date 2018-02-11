@@ -9,11 +9,11 @@
     <projectUrl>https://github.com/ppittle/HttpWebRequestWrapper</projectUrl>
     <licenseUrl>https://choosealicense.com/licenses/mit/</licenseUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>Library for testing/mocking HttpWebRequest and WebRequest.Create() </description>
-    <summary>Library for testing/mocking HttpWebRequest and WebRequest.Create()</summary>
-    <releaseNotes>Initial Alpha</releaseNotes>
+    <description>Test/mock (3rd party) code reliant on HttpWebRequest and WebRequest.Create() </description>
+    <summary>Test/mock (3rd party) code reliant on HttpWebRequest and WebRequest.Create()</summary>
+    <releaseNotes>Includes mockable MockHttpWebRequest, HttpWebRequestWrapperSession, HttpWebRequestWrapperRecorder, HttpWebRequestWrapperInterceptor and Playback controls</releaseNotes>
     <copyright>Copyright 2018</copyright>
-    <tags>HttpWebRequestWrapper, HttpWebRequest, WebClient, mock, test, fake, stub</tags>
+    <tags>HttpWebRequestWrapper, HttpWebRequest, HttpWebResponse, WebClient, MockHttpWebRequest, MockHttpWebResponse, mock, test, fake, stub, bdd</tags>
   </metadata>
   <files>
 	<file src=".\bin\$configuration$\HttpWebRequestWrapper.LowLevel.dll" target="lib\net20" />

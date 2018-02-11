@@ -46,7 +46,7 @@ namespace HttpWebRequestWrapper.Tests
             mockCreator.Stub(x => x.Create(Arg<Uri>.Is.Anything)).Return(mockRequest);
             mockRequest.Stub(x => x.GetResponse()).Return(mockResponse);
             mockResponse.Stub(x => x.GetResponseStream()).Return(fakeResponseStream);
-
+            
             // ACT
             var request = mockCreator.Create(new Uri("http://fakeSite.fake2"));
             var responseStream = request.GetResponse().GetResponseStream();

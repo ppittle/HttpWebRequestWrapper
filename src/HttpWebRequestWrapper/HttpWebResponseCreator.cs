@@ -46,7 +46,7 @@ namespace HttpWebRequestWrapper
         /// <param name="responseHeaders"></param>
         public HttpWebResponse Create(
             string responseBody,
-            HttpStatusCode statusCode = HttpStatusCode.Accepted,
+            HttpStatusCode statusCode = HttpStatusCode.OK,
             WebHeaderCollection responseHeaders = null)
         {
             return HttpWebResponseCreator.Create(
