@@ -11,7 +11,10 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Test/mock (3rd party) code reliant on HttpWebRequest and WebRequest.Create() </description>
     <summary>Test/mock (3rd party) code reliant on HttpWebRequest and WebRequest.Create()</summary>
-    <releaseNotes>Includes mockable MockHttpWebRequest, HttpWebRequestWrapperSession, HttpWebRequestWrapperRecorder, HttpWebRequestWrapperInterceptor and Playback controls</releaseNotes>
+    <releaseNotes>Test/mock (3rd party) code reliant on HttpWebRequest and WebRequest.Create()! 
+      
+      Includes mockable MockHttpWebRequest, HttpWebRequestWrapperSession, HttpWebRequestWrapperRecorder, HttpWebRequestWrapperInterceptor and Playback controls
+    </releaseNotes>
     <copyright>Copyright 2018</copyright>
     <tags>HttpWebRequestWrapper, HttpWebRequest, HttpWebResponse, WebClient, MockHttpWebRequest, MockHttpWebResponse, mock, test, fake, stub, bdd</tags>
   </metadata>

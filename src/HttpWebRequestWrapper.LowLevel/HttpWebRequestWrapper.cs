@@ -8,7 +8,8 @@ using System.Reflection;
 namespace HttpWebRequestWrapper
 {
     /// <summary>
-    /// Wraps <see cref="HttpWebRequest"/> as a public object with a public  constructor.
+    /// Wraps <see cref="HttpWebRequest"/> as a public object with a public constructor.
+    /// Use this class to create mocks that can stand in as <see cref="HttpWebRequest"/>s.
     /// </summary>
     /// <remarks>
     /// Inheritance will need to be changed to <see cref="HttpWebRequest"/> in IL, compiler

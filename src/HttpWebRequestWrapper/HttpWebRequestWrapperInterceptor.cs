@@ -8,7 +8,16 @@ using HttpWebRequestWrapper.IO;
 namespace HttpWebRequestWrapper
 {
     /// <summary>
-    /// 
+    /// Specialized <see cref="HttpWebRequest"/> that intercepts network traffic and instead returns 
+    /// programatically built <see cref="HttpWebResponse"/>.
+    /// <para />
+    /// This class is primarily intended to be used within tests to support creating reliable and consistent
+    /// test mocks for application code that requires making network calls.
+    /// <para />
+    /// It's not recommended to use this class directly, instead use a <see cref="HttpWebRequestWrapperSession"/>
+    /// and <see cref="HttpWebRequestWrapperInterceptorCreator"/>.
+    /// <para />
+    /// See <see cref="HttpWebRequestWrapperInterceptorCreator"/> for more information.
     /// </summary>
     public class HttpWebRequestWrapperInterceptor : HttpWebRequestWrapper
     {
@@ -16,7 +25,11 @@ namespace HttpWebRequestWrapper
         private readonly Func<InterceptedRequest, HttpWebResponse> _responseCreator;
 
         /// <summary>
-        /// 
+        /// Creates a new <see cref="HttpWebRequestWrapperInterceptor"/> for <paramref name="uri"/>.
+        /// Instead of performing network io, will instead use <paramref name="responseCreator"/> to generate
+        /// the <see cref="HttpWebResponse"/>.
+        /// <para />
+        /// See <see cref="HttpWebRequestWrapperInterceptorCreator"/> for more information.
         /// </summary>
         public HttpWebRequestWrapperInterceptor(Uri uri, Func<InterceptedRequest, HttpWebResponse> responseCreator) : base(uri)
         {

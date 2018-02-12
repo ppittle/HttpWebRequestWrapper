@@ -18,7 +18,12 @@ using System.Text;
 namespace HttpWebRequestWrapper
 {
     /// <summary>
-    /// 
+    /// Helper on top of <see cref="HttpWebResponseCreator"/> that 
+    /// pre-populates <see cref="_responseUri"/> and <see cref="_method"/> when
+    /// building <see cref="HttpWebResponse"/>.
+    /// <para />
+    /// Use these methods to build a real functioning <see cref="HttpWebResponse"/>
+    /// without having to deal with the reflection head-aches of doing it manually.
     /// </summary>
     public class HttpWebResponseInterceptorCreator
     {
@@ -26,10 +31,11 @@ namespace HttpWebRequestWrapper
         private readonly string _method;
 
         /// <summary>
-        /// 
+        /// Creates a new <see cref="HttpWebRequestWrapperInterceptorCreator"/>
+        /// and saves <paramref name="responseUri"/> and <paramref name="method"/>
+        /// so they can be used when building <see cref="HttpWebResponse"/>s, that way
+        /// those data points don't have to be provided in a Create method.
         /// </summary>
-        /// <param name="responseUri"></param>
-        /// <param name="method"></param>
         public HttpWebResponseInterceptorCreator(
             Uri responseUri, 
             string method)
@@ -39,11 +45,23 @@ namespace HttpWebRequestWrapper
         }
 
         /// <summary>
-        /// 
+        /// Create a new <see cref="HttpWebResponse"/>
+        /// such that <see cref="HttpWebResponse.GetResponseStream"/>
+        /// returns a stream containing <paramref name="responseBody"/>.
         /// </summary>
-        /// <param name="responseBody"></param>
-        /// <param name="statusCode"></param>
-        /// <param name="responseHeaders"></param>
+        /// <param name="responseBody">
+        /// Text that <see cref="HttpWebResponse.GetResponseStream"/> will return.
+        /// </param>
+        /// <param name="statusCode">
+        /// OPTIONAL: Sets <see cref="HttpWebResponse.StatusCode"/>. 
+        /// Defaults to <see cref="HttpStatusCode.OK"/>.
+        /// </param>
+        /// <param name="responseHeaders">
+        /// OPTIONAL: Set <see cref="HttpWebResponse.Headers"/>.
+        /// Defaults to an empty <see cref="WebHeaderCollection"/>
+        /// <para />
+        /// Use this to also set Cookies via <see cref="HttpResponseHeader.SetCookie"/>
+        /// </param>
         public HttpWebResponse Create(
             string responseBody,
             HttpStatusCode statusCode = HttpStatusCode.OK,
@@ -58,16 +76,37 @@ namespace HttpWebRequestWrapper
         }
 
         /// <summary>
-        /// 
+        /// Create a new <see cref="HttpWebResponse"/>
+        /// such that <see cref="HttpWebResponse.GetResponseStream"/>
+        /// returns <paramref name="responseStream"/>.
         /// </summary>
-        /// <param name="responseBody"></param>
-        /// <param name="statusCode"></param>
-        /// <param name="responseHeaders"></param>
-        /// <param name="decompressionMethod"></param>
-        /// <param name="contentLength"></param>
+        /// <param name="responseStream">
+        /// Sets <see cref="HttpWebResponse.GetResponseStream"/>
+        /// </param>
+        /// <param name="statusCode">
+        /// OPTIONAL: Sets <see cref="HttpWebResponse.StatusCode"/>. 
+        /// Defaults to <see cref="HttpStatusCode.OK"/>.
+        /// </param>
+        /// <param name="responseHeaders">
+        /// OPTIONAL: Set <see cref="HttpWebResponse.Headers"/>.
+        /// Defaults to an empty <see cref="WebHeaderCollection"/>
+        /// <para />
+        /// Use this to also set Cookies via <see cref="HttpResponseHeader.SetCookie"/>
+        /// </param>
+        /// <param name="decompressionMethod">
+        /// OPTIONAL: Controls if <see cref="HttpWebResponse"/> will decompress
+        /// <paramref name="responseStream"/> in its constructor.  
+        /// Default is <see cref="DecompressionMethods.None"/>
+        /// </param>
+        /// <param name="contentLength">
+        /// OPTIONAL: Set/override <see cref="HttpWebResponse.ContentLength"/>.
+        /// If this is null, I'll just pull the length from <paramref name="responseStream"/>,
+        /// thus this is necessary to set if <paramref name="responseStream"/> doesn't support
+        /// getting its length
+        /// </param>
         public HttpWebResponse Create(
-            Stream responseBody,
-            HttpStatusCode statusCode = HttpStatusCode.Accepted,
+            Stream responseStream,
+            HttpStatusCode statusCode = HttpStatusCode.OK,
             WebHeaderCollection responseHeaders = null,
             DecompressionMethods decompressionMethod = DecompressionMethods.None,
             long? contentLength = null)
@@ -76,32 +115,69 @@ namespace HttpWebRequestWrapper
                 _responseUri,
                 _method,
                 statusCode,
-                responseBody,
+                responseStream,
                 responseHeaders ?? new WebHeaderCollection(),
                 decompressionMethod,
                 contentLength: contentLength);
         }
 
         /// <summary>
-        /// 
+        /// Lowest-level Creator of a <see cref="HttpWebResponse"/> - full 
+        /// control over setting every parameter that can be passed into <see cref="HttpWebResponse"/>'s
+        /// constructor, except <see cref="_responseUri"/> and <see cref="_method"/> which were provided
+        /// in the constructor.  Use 
+        /// <see cref="HttpWebResponseCreator.Create(Uri,string,HttpStatusCode,Stream,WebHeaderCollection,DecompressionMethods,string,Nullable{long},string,bool,bool,bool,string)"/>
+        /// if you need to set those as well
         /// </summary>
-        /// <param name="responseUri"></param>
-        /// <param name="method"></param>
-        /// <param name="statusCode"></param>
-        /// <param name="responseStream"></param>
-        /// <param name="responseHeaders"></param>
-        /// <param name="decompressionMethod"></param>
-        /// <param name="mediaType"></param>
-        /// <param name="contentLength"></param>
-        /// <param name="statusDescription"></param>
-        /// <param name="isVersionHttp11"></param>
-        /// <param name="usesProxySemantics"></param>
-        /// <param name="isWebSocket"></param>
-        /// <param name="connectionGroupName"></param>
+        /// <param name="statusCode">
+        /// Sets <see cref="HttpWebResponse.StatusCode"/>
+        /// </param>
+        /// <param name="responseStream">
+        /// Sets <see cref="HttpWebResponse.GetResponseStream"/>
+        /// </param>
+        /// <param name="responseHeaders">
+        /// Sets <see cref="HttpWebResponse.Headers"/>.
+        /// Use this to also set Cookies via <see cref="HttpResponseHeader.SetCookie"/>.
+        /// </param>
+        /// <param name="decompressionMethod">
+        /// OPTIONAL: Controls if <see cref="HttpWebResponse"/> will decompress
+        /// <paramref name="responseStream"/> in its constructor.  
+        /// Default is <see cref="DecompressionMethods.None"/>
+        /// </param>
+        /// <param name="mediaType">
+        /// OPTIONAL:  If <see cref="HttpWebRequest.MediaType"/> is set, you
+        /// should probably pass that value in here so the correct 
+        /// <see cref="HttpWebResponse.ContentType"/>  response header is processed
+        /// and set.
+        /// Default is <c>null</c>
+        /// </param>
+        /// <param name="contentLength">
+        /// OPTIONAL: Set/override <see cref="HttpWebResponse.ContentLength"/>.
+        /// If this is null, I'll just pull the length from <paramref name="responseStream"/>,
+        /// thus this is necessary to set if <paramref name="responseStream"/> doesn't support
+        /// getting its length
+        /// </param>
+        /// <param name="statusDescription">
+        /// OPTIONAL: Set <see cref="HttpWebResponse.StatusDescription"/>.
+        /// Default is <c>null</c>
+        /// </param>
+        /// <param name="isVersionHttp11">
+        /// OPTIONAL: Set <see cref="HttpWebResponse.ProtocolVersion"/>
+        /// Default is <c>true</c>
+        /// </param>
+        /// <param name="usesProxySemantics">
+        /// OPTIONAL: Influences HttpWebResponse.KeepAlive
+        /// but not really sure how.
+        /// Default is <c>false</c>.
+        /// </param>
+        /// <param name="isWebSocket">
+        /// OPTIONAL: Default is <c>false</c>
+        /// </param>
+        /// <param name="connectionGroupName">
+        /// OPTIONAL: Default is <c>null</c>
+        /// </param>
 
         public HttpWebResponse Create(
-            Uri responseUri,
-            string method,
             HttpStatusCode statusCode,
             Stream responseStream,
             WebHeaderCollection responseHeaders,
@@ -115,8 +191,8 @@ namespace HttpWebRequestWrapper
             string connectionGroupName = null)
         {
             return HttpWebResponseCreator.Create(
-                responseUri,
-                method,
+                _responseUri,
+                _method,
                 statusCode,
                 responseStream,
                 responseHeaders,
@@ -133,19 +209,34 @@ namespace HttpWebRequestWrapper
 
 
     /// <summary>
-    /// 
+    /// Use these methods to build a real functioning <see cref="HttpWebResponse"/>
+    /// without having to deal with the reflection head-aches of doing it manually.
     /// </summary>
     public static class HttpWebResponseCreator
     {
         /// <summary>
-        /// 
+        /// Create a new <see cref="HttpWebResponse"/>
+        /// such that <see cref="HttpWebResponse.GetResponseStream"/>
+        /// returns a stream containing <paramref name="responseBody"/>.
         /// </summary>
-        /// <param name="responseUri"></param>
-        /// <param name="method"></param>
-        /// <param name="statusCode"></param>
-        /// <param name="responseBody"></param>
-        /// <param name="responseHeaders"></param>
-        /// <returns></returns>
+        /// <param name="responseUri">
+        /// Sets <see cref="HttpWebResponse.ResponseUri"/>
+        /// </param>
+        /// <param name="method">
+        /// Sets <see cref="HttpWebResponse.Method"/>
+        /// </param>
+        /// <param name="statusCode">
+        /// Sets <see cref="HttpWebResponse.StatusCode"/>
+        /// </param>
+        /// <param name="responseBody">
+        /// Text that <see cref="HttpWebResponse.GetResponseStream"/> will return.
+        /// </param>
+        /// <param name="responseHeaders">
+        /// OPTIONAL: Set <see cref="HttpWebResponse.Headers"/>.
+        /// Defaults to an empty <see cref="WebHeaderCollection"/>
+        /// <para />
+        /// Use this to also set Cookies via <see cref="HttpResponseHeader.SetCookie"/>
+        /// </param>
         public static HttpWebResponse Create(
             Uri responseUri,
             string method,
@@ -168,22 +259,63 @@ namespace HttpWebRequestWrapper
         }
 
         /// <summary>
-        /// 
+        /// Lowest-level Creator of a <see cref="HttpWebResponse"/> - full 
+        /// control over setting every parameter that can be passed into <see cref="HttpWebResponse"/>'s
+        /// constructor.
         /// </summary>
-        /// <param name="responseUri"></param>
-        /// <param name="method"></param>
-        /// <param name="statusCode"></param>
-        /// <param name="responseStream"></param>
-        /// <param name="responseHeaders"></param>
-        /// <param name="decompressionMethod"></param>
-        /// <param name="mediaType"></param>
-        /// <param name="contentLength"></param>
-        /// <param name="statusDescription"></param>
-        /// <param name="isVersionHttp11"></param>
-        /// <param name="usesProxySemantics"></param>
-        /// <param name="isWebSocket"></param>
-        /// <param name="connectionGroupName"></param>
-        /// <returns></returns>
+        /// <param name="responseUri">
+        /// Sets <see cref="HttpWebResponse.ResponseUri"/>
+        /// </param>
+        /// <param name="method">
+        /// Sets <see cref="HttpWebResponse.Method"/>
+        /// </param>
+        /// <param name="statusCode">
+        /// Sets <see cref="HttpWebResponse.StatusCode"/>
+        /// </param>
+        /// <param name="responseStream">
+        /// Sets <see cref="HttpWebResponse.GetResponseStream"/>
+        /// </param>
+        /// <param name="responseHeaders">
+        /// Sets <see cref="HttpWebResponse.Headers"/>.
+        /// Use this to also set Cookies via <see cref="HttpResponseHeader.SetCookie"/>.
+        /// </param>
+        /// <param name="decompressionMethod">
+        /// OPTIONAL: Controls if <see cref="HttpWebResponse"/> will decompress
+        /// <paramref name="responseStream"/> in its constructor.  
+        /// Default is <see cref="DecompressionMethods.None"/>
+        /// </param>
+        /// <param name="mediaType">
+        /// OPTIONAL:  If <see cref="HttpWebRequest.MediaType"/> is set, you
+        /// should probably pass that value in here so the correct 
+        /// <see cref="HttpWebResponse.ContentType"/>  response header is processed
+        /// and set.
+        /// Default is <c>null</c>
+        /// </param>
+        /// <param name="contentLength">
+        /// OPTIONAL: Set/override <see cref="HttpWebResponse.ContentLength"/>.
+        /// If this is null, I'll just pull the length from <paramref name="responseStream"/>,
+        /// thus this is necessary to set if <paramref name="responseStream"/> doesn't support
+        /// getting its length
+        /// </param>
+        /// <param name="statusDescription">
+        /// OPTIONAL: Set <see cref="HttpWebResponse.StatusDescription"/>.
+        /// Default is <c>null</c>
+        /// </param>
+        /// <param name="isVersionHttp11">
+        /// OPTIONAL: Set <see cref="HttpWebResponse.ProtocolVersion"/>
+        /// Default is <c>true</c>
+        /// </param>
+        /// <param name="usesProxySemantics">
+        /// OPTIONAL: Influences HttpWebResponse.KeepAlive
+        /// but not really sure how.
+        /// Default is <c>false</c>.
+        /// </param>
+        /// <param name="isWebSocket">
+        /// OPTIONAL: Default is <c>false</c>
+        /// </param>
+        /// <param name="connectionGroupName">
+        /// OPTIONAL: Default is <c>null</c>
+        /// </param>
         public static HttpWebResponse Create(
             Uri responseUri,
             string method,
