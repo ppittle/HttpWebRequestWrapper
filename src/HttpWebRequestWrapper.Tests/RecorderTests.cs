@@ -202,7 +202,7 @@ namespace HttpWebRequestWrapper.Tests
             _data.RecorderResponseBody.ShouldNotBeNull();
             _data.RecorderResponseBody.ShouldContain("html");
 
-            _data.RecorderRecording.Response.ShouldEqual(_data.RecorderResponseBody);
+            _data.RecorderRecording.ResponseBody.ShouldEqual(_data.RecorderResponseBody);
         }
 
         [Fact]
@@ -269,7 +269,7 @@ namespace HttpWebRequestWrapper.Tests
                 sr.ReadToEnd().ShouldContain("<html");
 
             request.RecordedRequests.First().RequestPayload.ShouldEqual(requestPayload);
-            request.RecordedRequests.First().Response.ShouldContain("<html");
+            request.RecordedRequests.First().ResponseBody.ShouldContain("<html");
         }
 
         // WARNING!! Makes live request
@@ -291,7 +291,7 @@ namespace HttpWebRequestWrapper.Tests
                 sr.ReadToEnd().ShouldContain("<html");
 
             request.RecordedRequests.First().Url.ShouldEqual(secureUri.ToString());
-            request.RecordedRequests.First().Response.ShouldContain("<html");
+            request.RecordedRequests.First().ResponseBody.ShouldContain("<html");
         }
 
         // WARNING!! Makes live request
@@ -310,7 +310,7 @@ namespace HttpWebRequestWrapper.Tests
             using (var sr = new StreamReader(response.GetResponseStream()))
                 sr.ReadToEnd().ShouldContain("<html");
 
-            request.RecordedRequests.First().Response.ShouldContain("<html");
+            request.RecordedRequests.First().ResponseBody.ShouldContain("<html");
         }
 
         // WARNING!! Makes live requests
@@ -333,14 +333,14 @@ namespace HttpWebRequestWrapper.Tests
             creator1.RecordingSession.RecordedRequests.Count.ShouldEqual(2);
 
             creator1.RecordingSession.RecordedRequests[0].Url.ShouldContain("github");
-            creator1.RecordingSession.RecordedRequests[0].Response.ShouldContain("<html");
+            creator1.RecordingSession.RecordedRequests[0].ResponseBody.ShouldContain("<html");
 
             creator1.RecordingSession.RecordedRequests[1].Url.ShouldContain("appveyor");
-            creator1.RecordingSession.RecordedRequests[1].Response.ShouldContain("<html");
+            creator1.RecordingSession.RecordedRequests[1].ResponseBody.ShouldContain("<html");
 
             creator2.RecordingSession.RecordedRequests.Count.ShouldEqual(1);
             creator2.RecordingSession.RecordedRequests[0].Url.ShouldContain("stackoverflow");
-            creator2.RecordingSession.RecordedRequests[0].Response.ShouldContain("<html");
+            creator2.RecordingSession.RecordedRequests[0].ResponseBody.ShouldContain("<html");
         }
         
         [Fact]

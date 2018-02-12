@@ -63,14 +63,14 @@ namespace HttpWebRequestWrapper.Tests
             {
                 Url = "http://fakeSite.fake/1",
                 Method = "GET",
-                Response = "Response 1"
+                ResponseBody = "Response 1"
             };
 
             var recordedRequest2 = new RecordedRequest
             {
                 Url = "http://fakeSite.fake/2",
                 Method = recordedRequest1.Method,
-                Response = "Response 2"
+                ResponseBody = "Response 2"
             };
             
             var recordingSession1 = new RecordingSession
@@ -99,10 +99,10 @@ namespace HttpWebRequestWrapper.Tests
             response2.ShouldNotBeNull();
 
             using (var sr = new StreamReader(response1.GetResponseStream()))
-                sr.ReadToEnd().ShouldEqual(recordedRequest1.Response);
+                sr.ReadToEnd().ShouldEqual(recordedRequest1.ResponseBody);
 
             using (var sr = new StreamReader(response2.GetResponseStream()))
-                sr.ReadToEnd().ShouldEqual(recordedRequest2.Response);
+                sr.ReadToEnd().ShouldEqual(recordedRequest2.ResponseBody);
         }
 
         [Fact]
@@ -152,7 +152,7 @@ namespace HttpWebRequestWrapper.Tests
             {
                 Url = requestUrl,
                 Method = "GET",
-                Response = fakeResponse1
+                ResponseBody = fakeResponse1
             });
 
             using (new HttpWebRequestWrapperSession(new HttpWebRequestWrapperInterceptorCreator(
@@ -166,7 +166,7 @@ namespace HttpWebRequestWrapper.Tests
                 {
                     Url = requestUrl,
                     Method = "GET",
-                    Response = fakeResponse2
+                    ResponseBody = fakeResponse2
                 });
 
                 var response2 = WebRequest.Create(requestUrl).GetResponse();
@@ -274,7 +274,7 @@ namespace HttpWebRequestWrapper.Tests
                 // intentionally use a different url from requestUrl
                 Url = "http://fakeSite.fake/3",
                 Method = "GET",
-                Response = "Custom Matching Algorithm"
+                ResponseBody = "Custom Matching Algorithm"
             };
 
             var recordingSession = new RecordingSession{RecordedRequests = new List<RecordedRequest>{recordedRequest}};
@@ -295,7 +295,7 @@ namespace HttpWebRequestWrapper.Tests
             response.ShouldNotBeNull();
 
             using (var sr = new StreamReader(response.GetResponseStream()))
-                sr.ReadToEnd().ShouldEqual(recordedRequest.Response);
+                sr.ReadToEnd().ShouldEqual(recordedRequest.ResponseBody);
         }
 
         [Fact]
@@ -379,14 +379,14 @@ namespace HttpWebRequestWrapper.Tests
             {
                 Url = "http://fakeSite.fake/1",
                 Method = "GET",
-                Response = "Response 1"
+                ResponseBody = "Response 1"
             };
 
             var recordedRequest2 = new RecordedRequest
             {
                 Url = "http://fakeSite.fake/2",
                 Method = recordedRequest1.Method,
-                Response = "Response 2"
+                ResponseBody = "Response 2"
             };
             
             var requestBuilder = new RecordingSessionInterceptorRequestBuilder(
@@ -412,13 +412,13 @@ namespace HttpWebRequestWrapper.Tests
             response2b.ShouldNotBeNull();
 
             using (var sr = new StreamReader(response1a.GetResponseStream()))
-                sr.ReadToEnd().ShouldEqual(recordedRequest1.Response);
+                sr.ReadToEnd().ShouldEqual(recordedRequest1.ResponseBody);
 
             using (var sr = new StreamReader(response1b.GetResponseStream()))
-                sr.ReadToEnd().ShouldEqual(recordedRequest1.Response);
+                sr.ReadToEnd().ShouldEqual(recordedRequest1.ResponseBody);
 
             using (var sr = new StreamReader(response2a.GetResponseStream()))
-                sr.ReadToEnd().ShouldEqual(recordedRequest2.Response);
+                sr.ReadToEnd().ShouldEqual(recordedRequest2.ResponseBody);
 
             response1c.StatusCode.ShouldEqual(HttpStatusCode.NotFound);
             response2b.StatusCode.ShouldEqual(HttpStatusCode.NotFound);
@@ -432,14 +432,14 @@ namespace HttpWebRequestWrapper.Tests
             {
                 Url = "http://fakeSite.fake/1",
                 Method = "GET",
-                Response = "Response 1"
+                ResponseBody = "Response 1"
             };
 
             var recordedRequest2 = new RecordedRequest
             {
                 Url = "http://fakeSite.fake/2",
                 Method = recordedRequest1.Method,
-                Response = "Response 2"
+                ResponseBody = "Response 2"
             };
             
             var recordingSession = new RecordingSession
@@ -463,10 +463,10 @@ namespace HttpWebRequestWrapper.Tests
             response2.ShouldNotBeNull();
 
             using (var sr = new StreamReader(response1.GetResponseStream()))
-                sr.ReadToEnd().ShouldEqual(recordedRequest1.Response);
+                sr.ReadToEnd().ShouldEqual(recordedRequest1.ResponseBody);
 
             using (var sr = new StreamReader(response2.GetResponseStream()))
-                sr.ReadToEnd().ShouldEqual(recordedRequest2.Response);
+                sr.ReadToEnd().ShouldEqual(recordedRequest2.ResponseBody);
         }
 
         [Fact]
@@ -477,14 +477,14 @@ namespace HttpWebRequestWrapper.Tests
             {
                 Url = "http://fakeSite.fake",
                 Method = "GET",
-                Response = "Response 1"
+                ResponseBody = "Response 1"
             };
 
             var recordedRequest2 = new RecordedRequest
             {
                 Url = recordedRequest1.Url,
                 Method = "POST",
-                Response = "Response 2"
+                ResponseBody = "Response 2"
             };
             
             var recordingSession = new RecordingSession
@@ -510,10 +510,10 @@ namespace HttpWebRequestWrapper.Tests
             response2.ShouldNotBeNull();
 
             using (var sr = new StreamReader(response1.GetResponseStream()))
-                sr.ReadToEnd().ShouldEqual(recordedRequest1.Response);
+                sr.ReadToEnd().ShouldEqual(recordedRequest1.ResponseBody);
 
             using (var sr = new StreamReader(response2.GetResponseStream()))
-                sr.ReadToEnd().ShouldEqual(recordedRequest2.Response);
+                sr.ReadToEnd().ShouldEqual(recordedRequest2.ResponseBody);
         }
 
         [Fact]
@@ -525,7 +525,7 @@ namespace HttpWebRequestWrapper.Tests
                 Url = "http://fakeSite.fake",
                 Method = "POST",
                 RequestPayload = "Request 1",
-                Response = "Response 1"
+                ResponseBody = "Response 1"
             };
 
             var recordedRequest2 = new RecordedRequest
@@ -533,7 +533,7 @@ namespace HttpWebRequestWrapper.Tests
                 Url = recordedRequest1.Url,
                 Method = "POST",
                 RequestPayload = "Request 2",
-                Response = "Response 2"
+                ResponseBody = "Response 2"
             };
             
             var recordingSession = new RecordingSession
@@ -564,10 +564,10 @@ namespace HttpWebRequestWrapper.Tests
             response2.ShouldNotBeNull();
 
             using (var sr = new StreamReader(response1.GetResponseStream()))
-                sr.ReadToEnd().ShouldEqual(recordedRequest1.Response);
+                sr.ReadToEnd().ShouldEqual(recordedRequest1.ResponseBody);
 
             using (var sr = new StreamReader(response2.GetResponseStream()))
-                sr.ReadToEnd().ShouldEqual(recordedRequest2.Response);
+                sr.ReadToEnd().ShouldEqual(recordedRequest2.ResponseBody);
         }
 
         [Fact]
@@ -579,7 +579,7 @@ namespace HttpWebRequestWrapper.Tests
                 Url = "http://fakeSite.fake",
                 Method = "GET",
                 RequestHeaders = new RecordedHeaders{{"Request1", new []{"Request1Value"}}},
-                Response = "Response 1"
+                ResponseBody = "Response 1"
             };
 
             var recordedRequest2 = new RecordedRequest
@@ -587,7 +587,7 @@ namespace HttpWebRequestWrapper.Tests
                 Url = recordedRequest1.Url,
                 Method = recordedRequest1.Method,
                 RequestHeaders = new RecordedHeaders{{"Request2", new []{"Request2Value"}}},
-                Response = "Response 2"
+                ResponseBody = "Response 2"
             };
             
             var recordingSession = new RecordingSession
@@ -615,10 +615,10 @@ namespace HttpWebRequestWrapper.Tests
             response2.ShouldNotBeNull();
 
             using (var sr = new StreamReader(response1.GetResponseStream()))
-                sr.ReadToEnd().ShouldEqual(recordedRequest1.Response);
+                sr.ReadToEnd().ShouldEqual(recordedRequest1.ResponseBody);
 
             using (var sr = new StreamReader(response2.GetResponseStream()))
-                sr.ReadToEnd().ShouldEqual(recordedRequest2.Response);
+                sr.ReadToEnd().ShouldEqual(recordedRequest2.ResponseBody);
         }
 
         [Fact]
@@ -628,7 +628,7 @@ namespace HttpWebRequestWrapper.Tests
             {
                 Url = "http://fakeSite.fake",
                 Method = "GET",
-                Response = "Response Body"
+                ResponseBody = "Response Body"
             };
 
             var recordingSession = new RecordingSession{RecordedRequests = new List<RecordedRequest>{recordedRequest}};
@@ -646,7 +646,7 @@ namespace HttpWebRequestWrapper.Tests
             response.ShouldNotBeNull();
 
             using (var sr = new StreamReader(response.GetResponseStream()))
-                sr.ReadToEnd().ShouldEqual(recordedRequest.Response);
+                sr.ReadToEnd().ShouldEqual(recordedRequest.ResponseBody);
         }
 
         [Fact]

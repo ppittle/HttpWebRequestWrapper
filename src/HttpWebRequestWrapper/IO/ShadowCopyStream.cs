@@ -1,11 +1,18 @@
 ﻿using System;
 using System.IO;
+using System.Net;
 using System.Text;
 
 namespace HttpWebRequestWrapper.IO
 {
     /// <summary>
-    /// 
+    /// <see cref="Stream"/> decorator that writes to 
+    /// <see cref="ShadowCopy"/> as well as the decorated 
+    /// stream on all writes.
+    /// <para />
+    /// Necessary to support reading from streams that might
+    /// be closed by code you don't control, as is the case
+    /// with <see cref="HttpWebRequest.GetRequestStream()"/>
     /// </summary>
     internal class ShadowCopyStream : Stream
     {

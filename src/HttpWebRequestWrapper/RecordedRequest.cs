@@ -7,24 +7,33 @@ using System.Net;
 namespace HttpWebRequestWrapper
 {
     /// <summary>
-    /// 
+    /// Request / Response data recorded by <see cref="HttpWebRequestWrapperRecorder"/>.  Can be played back
+    /// using <see cref="HttpWebRequestWrapperInterceptorCreator"/> and <see cref="RecordingSessionInterceptorRequestBuilder"/>.
+    /// <para />
+    /// Supports serialization to JSON!  Perfect for saving as an embedded resource in your test projects!
+    /// <para />
+    /// See <see cref="HttpWebRequestWrapperRecorder"/> for more information.
     /// </summary>
     [DebuggerDisplay("{Method} {Url}")]
     public class RecordedRequest
     {
         /// <summary>
-        /// 
+        /// Recorded <see cref="HttpWebRequest.Method"/>
         /// </summary>
         public string Method { get;set; }
         /// <summary>
-        /// 
+        /// Recorded <see cref="HttpWebRequest.RequestUri"/>
         /// </summary>
         public string Url { get; set; }
         /// <summary>
-        ///
+        /// Recorded <see cref="HttpWebRequest.CookieContainer"/>
+        /// <para />
+        /// This is mostly exposed for convenience.  This data will also
+        /// be contained in <see cref="RequestHeaders"/>.
         /// </summary>
         public CookieContainer RequestCookieContainer { get; set; }
         /// <summary>
+        /// Recorded <see cref="HttpWebRequest.Headers"/>
         /// <para />
         /// NOTE: From MS Documentation: 
         /// https://msdn.microsoft.com/en-us/library/system.net.httpwebrequest.headers%28v=vs.110%29.aspx
@@ -37,32 +46,40 @@ namespace HttpWebRequestWrapper
         /// </summary>
         public RecordedHeaders RequestHeaders { get; set; } = new RecordedHeaders();
         /// <summary>
-        /// 
+        /// Recorded <see cref="HttpWebRequest.GetRequestStream()"/>
         /// </summary>
         public string RequestPayload { get; set; }
         /// <summary>
-        /// 
+        /// Recorded <see cref="HttpWebResponse.GetResponseStream()"/>
         /// </summary>
-        public string Response { get; set; }
+        public string ResponseBody { get; set; }
         /// <summary>
-        /// 
+        /// Recorded <see cref="HttpWebResponse.Headers"/>
         /// </summary>
         public RecordedHeaders ResponseHeaders { get; set; } = new RecordedHeaders();
         /// <summary>
-        /// 
+        /// Recorded <see cref="HttpWebResponse.StatusCode"/>
         /// </summary>
         public HttpStatusCode ResponseStatusCode { get; set; }
     }
 
     /// <summary>
-    /// 
+    /// Helper class for dealing with <see cref="WebHeaderCollection"/> - 
+    /// primarily here to support json serialization as <see cref="WebHeaderCollection"/>
+    /// objects don't serialize correctly.
+    /// <para />
+    /// Supports two implicit conversions to/from <see cref="WebHeaderCollection"/>.
+    /// <para />
+    /// Also has some equality methods that were useful when unit testing the 
+    /// <see cref="HttpWebRequestWrapper"/> library.
     /// </summary>
     public class RecordedHeaders : Dictionary<string, string[]>, 
                                    IEquatable<RecordedHeaders>,
                                    IEquatable<WebHeaderCollection>
     {
         /// <summary>
-        /// 
+        /// Implicit conversion from a <see cref="RecordedHeaders"/> to a 
+        /// <see cref="WebHeaderCollection"/>.
         /// </summary>
         public static implicit operator WebHeaderCollection(RecordedHeaders headers)
         {
@@ -81,9 +98,9 @@ namespace HttpWebRequestWrapper
         }
 
         /// <summary>
-        /// 
+        /// Implicit conversion from a <see cref="RecordedHeaders"/> to a 
+        /// <see cref="WebHeaderCollection"/>.
         /// </summary>
-        /// <param name="webHeader"></param>
         public static implicit operator RecordedHeaders(WebHeaderCollection webHeader)
         {
             if (null == webHeader)
@@ -102,10 +119,13 @@ namespace HttpWebRequestWrapper
         }
 
         /// <summary>
-        /// Don't care about order
+        /// Performs an equality comparison with an external
+        /// <see cref="RecordedHeaders"/>.
+        /// <para />
+        /// Don't care about ordering, just make sure both dictionaries
+        /// contain every key, and they have the same array of strings for every
+        /// key.  All string comparisons are case sensitive.
         /// </summary>
-        /// <param name="other"></param>
-        /// <returns></returns>
         public bool Equals(RecordedHeaders other)
         {
             if (null == other)
@@ -117,7 +137,7 @@ namespace HttpWebRequestWrapper
             // associated with key.  string comparisons are default (case-sensitive)
             // but order doesn't matter.
             return
-                this.Count == other.Count &&
+                Count == other.Count &&
                 this.All(kvp =>
                     other.Any(otherKvp =>
                         string.Equals(kvp.Key, otherKvp.Key) &&
@@ -127,10 +147,11 @@ namespace HttpWebRequestWrapper
         }
 
         /// <summary>
-        /// 
+        /// Performs an equality comparison with an external
+        /// <see cref="WebHeaderCollection"/> by casting <paramref name="other"/>
+        /// to a <see cref="RecordedHeaders"/> and then using
+        /// <see cref="Equals(RecordedHeaders)"/>
         /// </summary>
-        /// <param name="other"></param>
-        /// <returns></returns>
         public bool Equals(WebHeaderCollection other)
         {
             return Equals((RecordedHeaders) other);
