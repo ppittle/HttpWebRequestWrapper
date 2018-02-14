@@ -69,6 +69,12 @@ namespace HttpWebRequestWrapper
                 HttpWebResponseCreator = new HttpWebResponseInterceptorCreator(RequestUri, Method),
                 PassThroughResponse = () =>
                 {
+                    // if we are going to pass through - we need to use the base.GetRequest
+                    // to copy over the request stream (as well as set some additional headers like Content-Length)
+                    if (_requestStream.ToArray().Length > 0)
+                        using (var requestStream = base.GetRequestStream())
+                            new MemoryStream(_requestStream.ToArray()).WriteTo(requestStream);
+
                     // save the pass through so we'll know if _responseCreator
                     // returned that to us - if so we don't want to try and 
                     // perform any initialization

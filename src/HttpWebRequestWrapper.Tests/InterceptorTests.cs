@@ -661,5 +661,32 @@ namespace HttpWebRequestWrapper.Tests
 
             response.Cookies.Count.ShouldBeGreaterThan(0);
         }
+
+        // WARNING!! Makes live requests
+        [Fact]
+        public void WritingToRequestStreamSetsContentLengthHeaderOnPassThrough()
+        {
+            // ARRANGE
+            var requestBody = nameof(WritingToRequestStreamSetsContentLengthHeaderOnPassThrough);
+            var responseCreator = 
+                new Func<InterceptedRequest, HttpWebResponse>(req => req.PassThroughResponse());
+
+            var httpWebRequest =new HttpWebRequestWrapperInterceptor(new Uri("http://www.github.com"), responseCreator)
+            {
+                Method = "POST"
+            };
+
+            using (var sw = new StreamWriter(httpWebRequest.GetRequestStream()))
+                sw.Write(requestBody);
+
+            // ACT
+            httpWebRequest.GetResponse();
+
+            // ASSERT
+
+            // only *after* GetResponse is ContentLength set - hopefully this should be sufficient
+            // so the web server on the other end is sent a packet with the ContentLength header
+            httpWebRequest.ContentLength.ShouldEqual(Encoding.UTF8.GetByteCount(requestBody));
+        }
     }
 }
