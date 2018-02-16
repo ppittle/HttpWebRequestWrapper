@@ -10,6 +10,9 @@ using Xunit;
 // Justification: This is intentional for the test.
 // ReSharper disable TryCastAlwaysSucceeds
 
+// Justification: Improves readability
+// ReSharper disable RedundantNameQualifier
+
 namespace HttpWebRequestWrapper.Tests
 {
     /// <summary>

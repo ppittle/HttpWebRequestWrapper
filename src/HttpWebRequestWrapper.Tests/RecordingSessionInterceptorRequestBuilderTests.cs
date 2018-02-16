@@ -11,6 +11,7 @@ using Xunit;
 // Justification: Test Class
 // ReSharper disable AssignNullToNotNullAttribute
 // ReSharper disable ConvertToConstant.Local
+// ReSharper disable InconsistentNaming
 
 namespace HttpWebRequestWrapper.Tests
 {
