@@ -61,6 +61,10 @@ namespace HttpWebRequestWrapper
         /// Recorded <see cref="HttpWebResponse.StatusCode"/>
         /// </summary>
         public HttpStatusCode ResponseStatusCode { get; set; }
+        /// <summary>
+        /// TODO
+        /// </summary>
+        public RecordedResponseException ResponseException { get; set; }
     }
 
     /// <summary>
@@ -156,5 +160,25 @@ namespace HttpWebRequestWrapper
         {
             return Equals((RecordedHeaders) other);
         }
+    }
+
+    /// <summary>
+    /// TODO
+    /// </summary>
+    [DebuggerDisplay("{Type.Name}: {Message}")]
+    public class RecordedResponseException
+    {
+        /// <summary>
+        /// TODO
+        /// </summary>
+        public string Message { get; set; }
+        /// <summary>
+        /// TODO
+        /// </summary>
+        public Type Type { get; set; }
+        /// <summary>
+        /// TODO
+        /// </summary>
+        public WebExceptionStatus? WebExceptionStatus { get; set; }
     }
 }

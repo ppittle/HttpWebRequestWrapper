@@ -7,6 +7,9 @@ using HttpWebRequestWrapper.IO;
 // Justification: Improves readability
 // ReSharper disable ConvertIfStatementToNullCoalescingExpression
 
+// Justification: Prefer instance methods
+// ReSharper disable MemberCanBeMadeStatic.Local
+
 namespace HttpWebRequestWrapper
 {
     /// <summary>
@@ -97,8 +100,42 @@ namespace HttpWebRequestWrapper
             };
             
             RecordedRequests.Add(recordedRequest);
-            
-            var response = getResponse();
+
+            try
+            {
+                var response = getResponse();
+
+                RecordResponse(response, recordedRequest);
+
+                return response;
+            }
+            catch (Exception e)
+            {
+                // record exception, exception's response and 
+                recordedRequest.ResponseException = new RecordedResponseException
+                {
+                    Message = e.Message,
+                    Type = e.GetType()
+                };
+
+                if (e is WebException webException)
+                {
+                    recordedRequest.ResponseException.WebExceptionStatus = webException.Status;
+
+                    // if WebException - try and record the response
+                    RecordResponse((HttpWebResponse) webException.Response, recordedRequest);
+                }
+
+                // re-throw
+                throw;
+            }
+        }
+
+        private void RecordResponse(HttpWebResponse response, RecordedRequest recordedRequest)
+        {
+            if (null == response)
+                // this can happen if we're coming from a WebException.Response
+                return;
 
             recordedRequest.ResponseHeaders = response.Headers;
             recordedRequest.ResponseStatusCode = response.StatusCode;
@@ -136,8 +173,6 @@ namespace HttpWebRequestWrapper
                 // suppress exception, but update history
                 recordedRequest.ResponseBody = $"ERROR: {e.Message}\r\n{e.StackTrace}";
             }
-
-            return response;
         }
 
         private static void CopyStream(Stream input, Stream output)
