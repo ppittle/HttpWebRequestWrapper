@@ -625,6 +625,7 @@ namespace HttpWebRequestWrapper.Tests
         [Fact]
         public void BuilderSetsResponseBody()
         {
+            // ARRANGE
             var recordedRequest = new RecordedRequest
             {
                 Url = "http://fakeSite.fake",
@@ -653,6 +654,7 @@ namespace HttpWebRequestWrapper.Tests
         [Fact]
         public void BuilderSetsResponseStatusCode()
         {
+            // ARRANGE
             var recordedRequest = new RecordedRequest
             {
                 Url = "http://fakeSite.fake",
@@ -680,6 +682,7 @@ namespace HttpWebRequestWrapper.Tests
         [Fact]
         public void BuilderSetsResponseHeaders()
         {
+            // ARRANGE
             var recordedRequest = new RecordedRequest
             {
                 Url = "http://fakeSite.fake",
