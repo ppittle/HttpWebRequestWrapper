@@ -254,6 +254,43 @@ namespace HttpWebRequestWrapper.Tests
         }
 
         [Fact]
+        public void CanSpoofWebRequestException()
+        {
+            // ARRANGE
+            var fakeUrl = new Uri("http://fakeSite.fake");
+
+            var fakeResponse =
+                HttpWebResponseCreator.Create(
+                    fakeUrl,
+                    "GET",
+                    HttpStatusCode.BadRequest,
+                    "Test Response Body",
+                    new WebHeaderCollection
+                    {
+                        {HttpResponseHeader.ETag, "testHeaders"}
+                    });
+
+            var fakeException = new WebException(
+                "Bad Request",
+                innerException: null,
+                status: WebExceptionStatus.SendFailure,
+                response: fakeResponse);
+
+            var responseCreator = new Func<InterceptedRequest, HttpWebResponse>(req => throw fakeException);
+                
+            IWebRequestCreate creator = new HttpWebRequestWrapperInterceptorCreator(responseCreator);
+            var request = creator.Create(fakeUrl);
+
+            // ACT
+            var exception = Record.Exception(() => request.GetResponse());
+            var webException = exception as WebException;
+
+            // ASSERT
+            webException.ShouldNotBeNull();
+            webException.ShouldEqual(fakeException);
+        }
+
+        [Fact]
         public void CanCreateResponseSpecificToRequestUrl()
         {
             var fakeUrl1 = new Uri("http://fakeSite.fake/1");
