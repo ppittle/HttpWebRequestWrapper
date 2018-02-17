@@ -115,18 +115,28 @@ namespace HttpWebRequestWrapper
                 RecordedRequests
                     .FirstOrDefault(recorded => MatchingAlgorithm(intercepted, recorded));
 
-            var response = 
-                null != matchedRecordedRequest
-                    ? RecordedResultResponseBuilder(matchedRecordedRequest, intercepted)
-                    : RequestNotFoundResponseBuilder(intercepted);
+            try
+            {
+                var response =
+                    null != matchedRecordedRequest
+                        ? RecordedResultResponseBuilder(matchedRecordedRequest, intercepted)
+                        : RequestNotFoundResponseBuilder(intercepted);
 
-            OnMatch?.Invoke(matchedRecordedRequest, intercepted, response);
+                OnMatch?.Invoke(matchedRecordedRequest, intercepted, response, null);
 
-            if (!AllowReplayingRecordedRequestsMultipleTimes &&
-                null != matchedRecordedRequest)
-                RecordedRequests.Remove(matchedRecordedRequest);
-
-            return response;
+                return response;
+            }
+            catch (Exception e)
+            {
+                OnMatch?.Invoke(matchedRecordedRequest, intercepted, null, e);
+                throw;
+            }
+            finally
+            {
+                if (!AllowReplayingRecordedRequestsMultipleTimes &&
+                    null != matchedRecordedRequest)
+                    RecordedRequests.Remove(matchedRecordedRequest);
+            }
         }
 
         #region Public Strategy Functions
@@ -158,8 +168,12 @@ namespace HttpWebRequestWrapper
         /// NOTE: the <see cref="RecordedRequests"/> property can be null if no match could
         /// be found and we needed to use <see cref="RequestNotFoundResponseBuilder"/> to 
         /// build a response.
+        /// <para />
+        /// If the HttpWebResponse is null and the Exception is not null, then we either matched
+        /// on a <see cref="RecordedResponseException"/>, or <see cref="RequestNotFoundResponseBuilder"/>
+        /// wanted to bubble up an exception (ie <see cref="WebExceptionStatus.NameResolutionFailure"/>).
         /// </summary>
-        public Action<RecordedRequest, InterceptedRequest, HttpWebResponse> OnMatch { get; set; }
+        public Action<RecordedRequest, InterceptedRequest, HttpWebResponse, Exception> OnMatch { get; set; }
         /// <summary>
         /// Flag that indicates if a <see cref="RecordedRequest"/> can be used multiple times by 
         /// different <see cref="InterceptedRequest"/>, as long as they match.
@@ -219,6 +233,10 @@ namespace HttpWebRequestWrapper
 
             if (null != recordedRequest.ResponseHeaders)
                 headers.Add(recordedRequest.ResponseHeaders);
+
+            if (recordedRequest.TryGetResponseException(out var recordedException))
+                // throw the recorded exception and let it bubble up
+                throw recordedException;
 
             return interceptedRequest.HttpWebResponseCreator.Create(
                 recordedRequest.ResponseBody,

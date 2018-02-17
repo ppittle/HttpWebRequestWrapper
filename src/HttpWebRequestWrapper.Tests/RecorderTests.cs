@@ -156,6 +156,12 @@ namespace HttpWebRequestWrapper.Tests
         }
 
         [Fact]
+        public void RecorderResponseDoesNotSetExceptionOnValidResponse()
+        {
+            _data.RecorderRecording.ResponseException.ShouldBeNull();
+        }
+
+        [Fact]
         public void CanRecordMethod()
         {
             _data.RecorderRequest.Method.ShouldNotBeEmpty();
@@ -229,6 +235,43 @@ namespace HttpWebRequestWrapper.Tests
         public void CanRecordResponseStatusCode()
         {
             _data.RecorderRecording.ResponseStatusCode.ShouldEqual(_data.RecorderResponse.StatusCode);
+        }
+
+        /// <summary>
+        /// When the web server returns certain error codes (like a 403), 
+        /// <see cref="HttpWebRequest.GetResponse"/> will throw a 
+        /// <see cref="WebException"/>.  
+        /// Make sure this exception gets recorded.
+        /// </summary>
+        // WARNING!! Makes live request
+        [Fact]
+        public void CanRecordRequestThatThrowsExceptionOnGetResponse()
+        {
+            // ARRANGE
+
+            // this url causes GetResponse() to throw a WebException - Protocol Error.  it also 
+            // conveniently returns a valid Response.
+            var unauthorizedUri = new Uri("https://accounts.google.com/o/oauth2/auth");
+            
+            var request = new HttpWebRequestWrapperRecorder(unauthorizedUri);
+
+            // ACT
+            var responseException = Record.Exception(() => request.GetResponse());
+
+            // ASSERT
+            responseException.ShouldNotBeNull();
+
+            request.RecordedRequests.Count.ShouldEqual(1);
+
+            request.RecordedRequests[0].ResponseException.ShouldNotBeNull();
+            request.RecordedRequests[0].ResponseException.Message.ShouldContain("Bad Request");
+            request.RecordedRequests[0].ResponseException.Type.ShouldEqual(typeof(WebException));
+            request.RecordedRequests[0].ResponseException.WebExceptionStatus.ShouldEqual(WebExceptionStatus.ProtocolError);
+
+            // make sure we recorded the response as well
+            request.RecordedRequests[0].ResponseBody.ShouldContain("<html");
+            request.RecordedRequests[0].ResponseStatusCode.ShouldEqual(HttpStatusCode.BadRequest);
+            request.RecordedRequests[0].ResponseHeaders.Count.ShouldBeGreaterThan(0);
         }
 
         // WARNING!! Makes live request
@@ -356,6 +399,60 @@ namespace HttpWebRequestWrapper.Tests
             recordingSession.ShouldNotBeNull();
             recordingSession.Count.ShouldEqual(1);
             recordingSession[0].Url.ShouldEqual(_data.RecorderRecording.Url);
+        }
+
+        /// <summary>
+        /// Make sure we can serialize a <see cref="WebException"/>
+        /// </summary>
+        [Fact]
+        public void RecordingSessionWithExceptionCanBeSerialized()
+        {
+            // ARRANGE
+
+            var fakeUrl = "https://www.github.com/applications/grants";
+
+            var fakeWebException = new WebException(
+                "Bad thing happened",
+                status: WebExceptionStatus.ProtocolError);
+
+            var recordingSession = new RecordingSession
+            {
+                RecordedRequests = new List<RecordedRequest>
+                {
+                    new RecordedRequest
+                    {
+                        Url = fakeUrl,
+                        Method = "GET",
+                        ResponseException = new RecordedResponseException
+                        {
+                            Message = fakeWebException.Message,
+                            Type = fakeWebException.GetType(),
+                            WebExceptionStatus = fakeWebException.Status
+                        }
+                    }
+                }
+            };
+
+            // ACT
+            var json = JsonConvert.SerializeObject(recordingSession, Formatting.Indented);
+
+            var deserialized = JsonConvert.DeserializeObject<RecordingSession>(json);
+
+            // ASSERT
+            deserialized.ShouldNotBeNull();
+            deserialized.RecordedRequests.Count.ShouldEqual(1);
+
+            deserialized.RecordedRequests[0].Url.ShouldEqual(fakeUrl);
+            deserialized.RecordedRequests[0].ResponseException.ShouldNotBeNull();
+            deserialized.RecordedRequests[0].ResponseException.Message.ShouldEqual(fakeWebException.Message);
+            deserialized.RecordedRequests[0].ResponseException.Type.ShouldEqual(fakeWebException.GetType());
+            deserialized.RecordedRequests[0].ResponseException.WebExceptionStatus.ShouldEqual(fakeWebException.Status);
+        }
+
+        [Fact]
+        public void SuccessfulRequestDoesNotSetRequestException()
+        {
+            _data.RecorderRecording.ResponseException.ShouldBeNull();
         }
 
         void IUseFixture<GitHubHomePageRequestFixture>.SetFixture(GitHubHomePageRequestFixture data)
