@@ -4,13 +4,28 @@ using System.Net;
 namespace HttpWebRequestWrapper.Extensions
 {
     /// <summary>
-    /// TODO
+    /// Helper methods for working with <see cref="RecordedRequest"/>s
     /// </summary>
     public static class RecordedRequestExtensions
     {
         /// <summary>
-        /// TODO
+        /// Examines <paramref name="request"/> and if <see cref="RecordedRequest.ResponseException"/>
+        /// is populated, creates a new strongly typed exception based on the data in <paramref name="request"/>
+        /// and sets <paramref name="recordedException"/>.
+        /// <para />
+        /// If <see cref="RecordedRequest.ResponseException"/> is null, then <paramref name="recordedException"/>
+        /// is set to null and this returns <c>false</c>.
+        /// <para />
+        /// This method can activate any exception type as long as it has a constructor that takes a single
+        /// string parameter.
+        /// <para />
+        /// However, there is special handling for <see cref="WebException"/>s.  If <see cref="RecordedRequest.ResponseBody"/>
+        /// and the other Response properties are set, then this data will be used to set <see cref="WebException.Response"/>.
         /// </summary>
+        /// <returns>
+        /// <c>true</c> if <paramref name="request"/> has a <see cref="RecordedRequest.ResponseException"/>,
+        /// indicating <paramref name="recordedException"/> has been populated.  <c>false</c> otherwise.
+        /// </returns>
         public static bool TryGetResponseException(this RecordedRequest request, out Exception recordedException)
         {
             recordedException = null;
