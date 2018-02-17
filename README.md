@@ -160,7 +160,7 @@ new RecordingSessionInterceptorRequestBuilder(recordingSession)
        // return a 500 when page isn't found
        interceptedReq.HttpWebResponseCreator.Create("Server Error", HttpStatusCode.InternalServerError),
 
-    OnMatch = (recordedReq, interceptedReq, httpWebResponse) =>
+    OnMatch = (recordedReq, interceptedReq, httpWebResponse, exception) =>
        // keep a count of requests made or do additional manipulation of the web response
        Log.Write("Application made another request");
 
@@ -173,6 +173,12 @@ new RecordingSessionInterceptorRequestBuilder(recordingSession)
 ```
 
 But if that's not enough, you can easily implement your own `IInterceptorRequestBuilder` for full control!
+
+#### WebException Support
+
+Any Exception thown during `HttpWebRequest.GetResponse()` is captured by `HttpWebRequestWrapperRecorder` and is rethrown by `RecordingSessionInterceptorRequestBuilder` during playback!  This includes a fully populated `WebException` with a `WebException.Response`.
+
+Additionally, `RequestNotFoundResponseBuilder` also supports throwing exceptions, you're free to overload and throw a NotFound WebException.
 
 #### Dynamic Playback
 

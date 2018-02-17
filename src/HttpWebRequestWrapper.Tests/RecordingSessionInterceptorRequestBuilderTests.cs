@@ -12,6 +12,8 @@ using Xunit;
 // ReSharper disable AssignNullToNotNullAttribute
 // ReSharper disable ConvertToConstant.Local
 // ReSharper disable InconsistentNaming
+// ReSharper disable PossibleNullReferenceException
+// ReSharper disable PossibleInvalidOperationException
 
 namespace HttpWebRequestWrapper.Tests
 {
@@ -266,6 +268,31 @@ namespace HttpWebRequestWrapper.Tests
         }
 
         [Fact]
+        public void CanCustomizeNotFoundBehaviorToThrowException()
+        {
+            // ARRANGE
+            var exceptionMessage = "Test error";
+
+            var recordingSession = new RecordingSession[0];
+
+            var requestBuilder = new RecordingSessionInterceptorRequestBuilder(recordingSession)
+            {
+                RequestNotFoundResponseBuilder = req => throw new ProtocolViolationException(exceptionMessage)
+            };
+
+            IWebRequestCreate creator = new HttpWebRequestWrapperInterceptorCreator(requestBuilder);
+
+            var request = creator.Create(new Uri("http://fakeSite.fake"));
+
+            // ACT
+            var exception = Record.Exception(() => request.GetResponse());
+
+            // ASSERT
+            exception.ShouldBeType<ProtocolViolationException>();
+            exception.Message.ShouldEqual(exceptionMessage);
+        }
+
+        [Fact]
         public void CanCustomizeMatchingAlgorithm()
         {
             // ARRANGE
@@ -349,7 +376,7 @@ namespace HttpWebRequestWrapper.Tests
 
             var requestBuilder = new RecordingSessionInterceptorRequestBuilder(recordingSession)
             {
-                OnMatch = (recordedReq, interceptedReq, httpWebResponse) =>
+                OnMatch = (recordedReq, interceptedReq, httpWebResponse, exception) =>
                 {
                     recordedReq.ShouldEqual(recordedRequest);
                     interceptedReq.HttpWebRequest.RequestUri.ShouldEqual(new Uri(recordedRequest.Url));
@@ -705,6 +732,119 @@ namespace HttpWebRequestWrapper.Tests
             response.ShouldNotBeNull();
 
             recordedRequest.ResponseHeaders.ShouldEqual((RecordedHeaders)response.Headers);
+        }
+
+        [Fact]
+        public void BuilderSetsWebException()
+        {
+            // ARRANGE
+            var recordedRequest = new RecordedRequest
+            {
+                Url = "http://fakeSite.fake",
+                Method = "GET",
+                ResponseException = new RecordedResponseException
+                {
+                    Message = "Test Exception Message",
+                    Type = typeof(WebException),
+                    WebExceptionStatus = WebExceptionStatus.ConnectionClosed
+                }
+            };
+
+            var recordingSession = new RecordingSession{RecordedRequests = new List<RecordedRequest>{recordedRequest}};
+
+            var requestBuilder = new RecordingSessionInterceptorRequestBuilder(recordingSession);
+
+            IWebRequestCreate creator = new HttpWebRequestWrapperInterceptorCreator(requestBuilder);
+
+            var request = creator.Create(new Uri(recordedRequest.Url));
+
+            // ACT
+            var exception = Record.Exception(() => request.GetResponse());
+            var webException = exception as WebException;
+
+            // ASSERT
+            webException.ShouldNotBeNull();
+            webException.Message.ShouldEqual(recordedRequest.ResponseException.Message);
+            webException.Status.ShouldEqual(recordedRequest.ResponseException.WebExceptionStatus.Value);
+            webException.Response.ShouldBeNull();
+        }
+
+        [Fact]
+        public void BuilderSetsWebExceptionWithResponse()
+        {
+            // ARRANGE
+            var recordedRequest = new RecordedRequest
+            {
+                Url = "http://fakeSite.fake",
+                Method = "GET",
+                ResponseException = new RecordedResponseException
+                {
+                    Message = "Test Exception Message",
+                    Type = typeof(WebException),
+                    WebExceptionStatus = WebExceptionStatus.ConnectionClosed
+                },
+                ResponseBody = "Fake Error Response",
+                ResponseHeaders = new RecordedHeaders{ {"header1", new []{ "value1"}}},
+                ResponseStatusCode = HttpStatusCode.InternalServerError
+            };
+
+            var recordingSession = new RecordingSession{RecordedRequests = new List<RecordedRequest>{recordedRequest}};
+
+            var requestBuilder = new RecordingSessionInterceptorRequestBuilder(recordingSession);
+
+            IWebRequestCreate creator = new HttpWebRequestWrapperInterceptorCreator(requestBuilder);
+
+            var request = creator.Create(new Uri(recordedRequest.Url));
+
+            // ACT
+            var exception = Record.Exception(() => request.GetResponse());
+            var webException = exception as WebException;
+            var webExceptionResponse = webException.Response as HttpWebResponse;
+
+            // ASSERT
+            webException.ShouldNotBeNull();
+            webException.Message.ShouldEqual(recordedRequest.ResponseException.Message);
+            webException.Status.ShouldEqual(recordedRequest.ResponseException.WebExceptionStatus.Value);
+
+            webExceptionResponse.ShouldNotBeNull();
+            Assert.Equal(recordedRequest.ResponseHeaders, (RecordedHeaders)webExceptionResponse.Headers);
+            webExceptionResponse.StatusCode.ShouldEqual(recordedRequest.ResponseStatusCode);
+            webExceptionResponse.ContentLength.ShouldBeGreaterThan(0);
+
+            using (var sr = new StreamReader(webExceptionResponse.GetResponseStream()))
+                sr.ReadToEnd().ShouldEqual(recordedRequest.ResponseBody);
+        }
+
+        [Fact]
+        public void BuilderSetsInvalidOperationException()
+        {
+            // ARRANGE
+            var recordedRequest = new RecordedRequest
+            {
+                Url = "http://fakeSite.fake",
+                Method = "GET",
+                ResponseException = new RecordedResponseException
+                {
+                    Message = "Test Exception Message",
+                    Type = typeof(InvalidOperationException)
+                }
+            };
+
+            var recordingSession = new RecordingSession{RecordedRequests = new List<RecordedRequest>{recordedRequest}};
+
+            var requestBuilder = new RecordingSessionInterceptorRequestBuilder(recordingSession);
+
+            IWebRequestCreate creator = new HttpWebRequestWrapperInterceptorCreator(requestBuilder);
+
+            var request = creator.Create(new Uri(recordedRequest.Url));
+
+            // ACT
+            var exception = Record.Exception(() => request.GetResponse());
+
+            // ASSERT
+            exception.ShouldNotBeNull();
+            exception.ShouldBeType<InvalidOperationException>();
+            exception.Message.ShouldEqual(recordedRequest.ResponseException.Message);
         }
     }
 }
