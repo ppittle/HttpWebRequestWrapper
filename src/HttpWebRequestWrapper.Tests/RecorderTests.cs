@@ -156,6 +156,12 @@ namespace HttpWebRequestWrapper.Tests
         }
 
         [Fact]
+        public void RecorderResponseDoesNotSetExceptionOnValidResponse()
+        {
+            _data.RecorderRecording.ResponseException.ShouldBeNull();
+        }
+
+        [Fact]
         public void CanRecordMethod()
         {
             _data.RecorderRequest.Method.ShouldNotBeEmpty();
