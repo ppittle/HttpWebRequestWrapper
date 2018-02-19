@@ -32,6 +32,8 @@ namespace HttpWebRequestWrapper
     /// </summary>
     public class RecordingSessionInterceptorRequestBuilder : IInterceptorRequestBuilder
     {
+        private readonly object _buildResponseLock = new object();
+
         /// <summary>
         /// Collection of <see cref="RecordedRequest"/>s used by <see cref="MatchingAlgorithm"/>
         /// to match an incoming <see cref="InterceptedRequest"/> and build a <see cref="HttpWebResponse"/>.
@@ -111,31 +113,34 @@ namespace HttpWebRequestWrapper
         /// </summary>
         public HttpWebResponse BuildResponse(InterceptedRequest intercepted)
         {
-            var matchedRecordedRequest =
-                RecordedRequests
-                    .FirstOrDefault(recorded => MatchingAlgorithm(intercepted, recorded));
-
-            try
+            lock (_buildResponseLock)
             {
-                var response =
-                    null != matchedRecordedRequest
-                        ? RecordedResultResponseBuilder(matchedRecordedRequest, intercepted)
-                        : RequestNotFoundResponseBuilder(intercepted);
+                var matchedRecordedRequest =
+                    RecordedRequests
+                        .FirstOrDefault(recorded => MatchingAlgorithm(intercepted, recorded));
 
-                OnMatch?.Invoke(matchedRecordedRequest, intercepted, response, null);
+                try
+                {
+                    var response =
+                        null != matchedRecordedRequest
+                            ? RecordedResultResponseBuilder(matchedRecordedRequest, intercepted)
+                            : RequestNotFoundResponseBuilder(intercepted);
 
-                return response;
-            }
-            catch (Exception e)
-            {
-                OnMatch?.Invoke(matchedRecordedRequest, intercepted, null, e);
-                throw;
-            }
-            finally
-            {
-                if (!AllowReplayingRecordedRequestsMultipleTimes &&
-                    null != matchedRecordedRequest)
-                    RecordedRequests.Remove(matchedRecordedRequest);
+                    OnMatch?.Invoke(matchedRecordedRequest, intercepted, response, null);
+
+                    return response;
+                }
+                catch (Exception e)
+                {
+                    OnMatch?.Invoke(matchedRecordedRequest, intercepted, null, e);
+                    throw;
+                }
+                finally
+                {
+                    if (!AllowReplayingRecordedRequestsMultipleTimes &&
+                        null != matchedRecordedRequest)
+                        RecordedRequests.Remove(matchedRecordedRequest);
+                }
             }
         }
 
