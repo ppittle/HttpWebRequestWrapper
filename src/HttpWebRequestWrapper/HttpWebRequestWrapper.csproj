@@ -50,6 +50,7 @@
   <ItemGroup>
     <Compile Include="Extensions\RecordedRequestExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
+    <Compile Include="HttpWebRequestWrapperDelegateCreator.cs" />
     <Compile Include="HttpWebRequestWrapperInterceptor.cs" />
     <Compile Include="HttpWebRequestWrapperInterceptorCreator.cs" />
     <Compile Include="HttpWebRequestWrapperRecorder.cs" />
