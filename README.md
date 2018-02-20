@@ -251,6 +251,25 @@ using(new HttpWebRequestWrapperSession(new CustomWrapperCreator()))
 }
 ```
 
+### Multiple WebRequestCreate
+
+Have an advanced scenario where you need to use multiple `IWebRequestCreate` objects?  You can use the `HttpWebRequestWrapperDelegateCreator` to decide just-in-time which `IWebRequestCreate` to use for a specific Uri:
+
+```csharp
+var creatorSelector = new Func<Uri, IWebRequestCreate>(url =>
+    url.Contains("api1")
+        ? api1InterceptorCreator
+        : commonInterceptorCreator);
+
+using (new HttpWebRequestWrapperSession(new HttpWebRequestWrapperDelegateCreator(creatorSelector)))
+{
+    // handled by api1Interceptor
+    WebRequest.Create("http://3rdParty.com/api1/request");
+    // handled by commonInterceptor
+    WebRequest.Create("http://someother.site");
+}
+```
+
 ## Secret Sauce
 
 **HttpWebRequestWrapper** works by inheriting from `HttpWebRequest`.  This doesn't seem revolutionary, except these are the `HttpWebRequest` constructors:
