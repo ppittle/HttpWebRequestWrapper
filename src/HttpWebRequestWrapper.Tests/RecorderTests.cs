@@ -29,6 +29,11 @@ namespace HttpWebRequestWrapper.Tests
     /// </remarks>
     public class RecorderTests : IUseFixture<RecorderTests.GitHubHomePageRequestFixture>
     {
+        static RecorderTests()
+        {
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+        }
+
         private GitHubHomePageRequestFixture _data;
         private class GitHubHomePageRequestFixture
         {
@@ -50,6 +55,9 @@ namespace HttpWebRequestWrapper.Tests
             /// </summary>
             public GitHubHomePageRequestFixture()
             {
+                // necessary for requests to github to work
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+
                 RequestBody = "Hello World";
 
                 var requestUri = new Uri("http://www.github.com");

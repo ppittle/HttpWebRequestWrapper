@@ -22,6 +22,12 @@ namespace HttpWebRequestWrapper.Tests
     /// </summary>
     public class RecordingSessionInterceptorRequestBuilderTests
     {
+        static RecordingSessionInterceptorRequestBuilderTests()
+        {
+            // necessary for requests to github to work
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+        }
+
         // WARNING!! Makes live request
         [Fact]
         public void CanPlaybackRecordingSessionFromRecorder()

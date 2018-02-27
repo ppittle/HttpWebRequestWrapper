@@ -11,12 +11,18 @@ namespace HttpWebRequestWrapper.Tests
 {
     public class HttpClientTests
     {
+        static HttpClientTests()
+        {
+            // necessary for requests to github to work
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+        }
+
         // WARNING!! Makes live request
         [Fact]
         public async Task CanRecord()
         {
             // ARRANGE
-            var url = "http://www.stackoverflow.com/";
+            var url = "http://www.github.com/";
             
             var recordingSession = new RecordingSession();
             HttpResponseMessage response;
