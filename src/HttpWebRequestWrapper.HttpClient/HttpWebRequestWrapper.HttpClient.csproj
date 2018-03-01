@@ -44,8 +44,21 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="HttpClientHandlerInterceptor.cs" />
+    <Compile Include="HttpClientAndRequestSession.cs" />
+    <Compile Include="Extensions\HttpClientHandlerExtensions.cs" />
+    <Compile Include="HttpClientHandlerStartRequestTaskVisitor.cs" />
+    <Compile Include="Extensions\HttpWebRequestRefelctionExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Extensions\TaskReflectionExtensions.cs" />
+    <Compile Include="Extensions\TaskSchedulerReflectionExtensons.cs" />
+    <Compile Include="Threading\Tasks\IVisitTaskOnSchedulerQueue.cs" />
+    <Compile Include="Threading\Tasks\TaskSchedulerProxy.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\HttpWebRequestWrapper\HttpWebRequestWrapper.csproj">
+      <Project>{adf62182-ce9f-4dce-b5c7-b089a386bbd1}</Project>
+      <Name>HttpWebRequestWrapper</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
