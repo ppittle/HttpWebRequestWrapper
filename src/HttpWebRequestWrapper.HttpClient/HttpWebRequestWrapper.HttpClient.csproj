@@ -60,5 +60,8 @@
       <Name>HttpWebRequestWrapper</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="HttpWebRequestWrapper.HttpClient.nuspec" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

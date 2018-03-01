@@ -66,8 +66,5 @@
     <Compile Include="IO\ShadowCopyStream.cs" />
     <Compile Include="RecordingSessionInterceptorRequestBuilder.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="HttpWebRequestWrapper.nuspec" />
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

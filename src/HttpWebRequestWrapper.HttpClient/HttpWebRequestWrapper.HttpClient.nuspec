@@ -33,7 +33,7 @@
     <file src=".\bin\$configuration$\HttpWebRequestWrapper.xml" target="lib\net40" />
     <file src=".\bin\$configuration$\HttpWebRequestWrapper.dll" target="lib\net45" />
     <file src=".\bin\$configuration$\HttpWebRequestWrapper.xml" target="lib\net45" />
-    <file src="..\HttpWebRequestWrapper.HttpClient\bin\$configuration$\HttpWebRequestWrapper.HttpClient.dll" target="lib\net45" />
-    <file src="..\HttpWebRequestWrapper.HttpClient\bin\$configuration$\HttpWebRequestWrapper.HttpClient.xml" target="lib\net45" />
+    <file src=".\bin\$configuration$\HttpWebRequestWrapper.HttpClient.dll" target="lib\net45" />
+    <file src=".\bin\$configuration$\HttpWebRequestWrapper.HttpClient.xml" target="lib\net45" />
   </files>
 </package>
