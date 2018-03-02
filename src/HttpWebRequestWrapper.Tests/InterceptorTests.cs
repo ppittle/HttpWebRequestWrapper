@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using HttpWebRequestWrapper.Tests.Properties;
 using Should;
 using Xunit;
@@ -562,7 +563,7 @@ namespace HttpWebRequestWrapper.Tests
         }
 
         [Fact]
-        public void CanSpoofAsyncRequest()
+        public async Task CanSpoofAsyncRequest()
         {
             var requestPayload = "Test Request";
             var responseBody = "Test Response";
@@ -577,28 +578,16 @@ namespace HttpWebRequestWrapper.Tests
 
             IWebRequestCreate creator = new HttpWebRequestWrapperInterceptorCreator(responseCreator);
 
-            var request = creator.Create(new Uri("http://fakeSite.fake"));
+            var request = (HttpWebRequest)creator.Create(new Uri("http://fakeSite.fake"));
             request.Method = "POST";
 
             // ACT
-            var asyncResult = request.BeginGetRequestStream(
-                req =>
-                {
-                    var requestStream = (req.AsyncState as HttpWebRequest).EndGetRequestStream(req);
 
-                    using (var sw = new StreamWriter(requestStream))
-                        sw.Write(requestPayload);
-                },
-                request);
-            
-            if (!asyncResult.IsCompleted)
-                Thread.Sleep(TimeSpan.FromMilliseconds(250));
+            using (var sw = new StreamWriter(await request.GetRequestStreamAsync()))
+                await sw.WriteAsync(requestPayload);
 
-            if (!asyncResult.IsCompleted)
-                throw new Exception("Web Response didn't come back in reasonable time frame");
+            var response = await request.GetResponseAsync();
 
-            var response = request.GetResponse();
-            
             // ASSERT
             response.ShouldNotBeNull();
 
