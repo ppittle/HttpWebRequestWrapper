@@ -22,6 +22,12 @@ namespace HttpWebRequestWrapper.Tests
     /// </summary>
     public class InterceptorTests
     {
+        static InterceptorTests()
+        {
+            // necessary for requests to github to work
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+        }
+
         [Fact]
         public void GetResponseReturnsARealHttpWebResponse()
         {

@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>HttpWebRequestWrapper</id>
+    <version>$version$</version>
+    <title>HttpWebRequestWrapper</title>
+    <authors>Copacetic Software / Philip Pittle</authors>
+    <owners>ppittle</owners>
+    <projectUrl>https://github.com/ppittle/HttpWebRequestWrapper</projectUrl>
+    <licenseUrl>https://choosealicense.com/licenses/mit/</licenseUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Test/mock (3rd party) code reliant on HttpClient, WebClient, HttpWebRequest and WebRequest.Create() </description>
+    <summary>Test/mock (3rd party) code reliant on HttpClient, WebClient, HttpWebRequest and WebRequest.Create()</summary>
+    <releaseNotes>Test/mock (3rd party) code reliant on HttpWebRequest and WebRequest.Create()! 
+      
+      Includes mockable MockHttpWebRequest, HttpWebRequestWrapperSession, HttpWebRequestWrapperRecorder, HttpWebRequestWrapperInterceptor and Playback controls
+      
+      Now supports HttpClient!!
+    </releaseNotes>
+    <copyright>Copyright 2018</copyright>
+    <tags>HttpWebRequestWrapper, HttpWebRequest, HttpWebResponse, WebClient, HttpClient MockHttpWebRequest, MockHttpWebResponse, mock, test, fake, stub, bdd, recoding, playback</tags>
+  </metadata>
+  <files>
+    <file src=".\bin\$configuration$\HttpWebRequestWrapper.LowLevel.dll" target="lib\net20" />
+    <file src=".\bin\$configuration$\HttpWebRequestWrapper.LowLevel.xml" target="lib\net20" />
+    <file src=".\bin\$configuration$\HttpWebRequestWrapper.LowLevel.dll" target="lib\net35" />
+    <file src=".\bin\$configuration$\HttpWebRequestWrapper.LowLevel.xml" target="lib\net35" />
+    <file src=".\bin\$configuration$\HttpWebRequestWrapper.LowLevel.dll" target="lib\net40" />
+    <file src=".\bin\$configuration$\HttpWebRequestWrapper.LowLevel.xml" target="lib\net40" />
+    <file src=".\bin\$configuration$\HttpWebRequestWrapper.LowLevel.dll" target="lib\net45" />
+    <file src=".\bin\$configuration$\HttpWebRequestWrapper.LowLevel.xml" target="lib\net45" />
+    <file src=".\bin\$configuration$\HttpWebRequestWrapper.dll" target="lib\net35" />
+    <file src=".\bin\$configuration$\HttpWebRequestWrapper.xml" target="lib\net35" />
+    <file src=".\bin\$configuration$\HttpWebRequestWrapper.dll" target="lib\net40" />
+    <file src=".\bin\$configuration$\HttpWebRequestWrapper.xml" target="lib\net40" />
+    <file src=".\bin\$configuration$\HttpWebRequestWrapper.dll" target="lib\net45" />
+    <file src=".\bin\$configuration$\HttpWebRequestWrapper.xml" target="lib\net45" />
+    <file src=".\bin\$configuration$\HttpWebRequestWrapper.HttpClient.dll" target="lib\net45" />
+    <file src=".\bin\$configuration$\HttpWebRequestWrapper.HttpClient.xml" target="lib\net45" />
+  </files>
+</package>

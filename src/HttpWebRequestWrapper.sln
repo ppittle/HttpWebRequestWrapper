@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27130.2020
+VisualStudioVersion = 15.0.27130.2027
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpWebRequestWrapper", "HttpWebRequestWrapper\HttpWebRequestWrapper.csproj", "{ADF62182-CE9F-4DCE-B5C7-B089A386BBD1}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -18,6 +18,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		modifyHttpWebRequestWrapper.LowLevel.bat = modifyHttpWebRequestWrapper.LowLevel.bat
 		..\README.md = ..\README.md
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpWebRequestWrapper.HttpClient", "HttpWebRequestWrapper.HttpClient\HttpWebRequestWrapper.HttpClient.csproj", "{8CFDEBBF-EFF3-4AD5-95B1-6E4EF47C5420}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -37,6 +39,10 @@ Global
 		{F4417E60-9676-483A-90A7-712C7C0024D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F4417E60-9676-483A-90A7-712C7C0024D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F4417E60-9676-483A-90A7-712C7C0024D7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8CFDEBBF-EFF3-4AD5-95B1-6E4EF47C5420}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8CFDEBBF-EFF3-4AD5-95B1-6E4EF47C5420}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8CFDEBBF-EFF3-4AD5-95B1-6E4EF47C5420}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8CFDEBBF-EFF3-4AD5-95B1-6E4EF47C5420}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

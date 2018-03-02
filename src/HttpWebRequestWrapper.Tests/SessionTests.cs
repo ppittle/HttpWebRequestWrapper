@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Net;
+using HttpWebRequestWrapper.HttpClient;
 using Moq;
 using Should;
 using Xunit;
@@ -157,6 +158,22 @@ namespace HttpWebRequestWrapper.Tests
                     x => x.HttpWebResponseCreator.Create(fakeResponse))))
             {
                 new WebClient().DownloadString("https://fakeSite.fake").ShouldEqual(fakeResponse);
+            }
+        }
+
+        [Fact]
+        public void SupportsHttpClient()
+        {
+            var fakeResponse = "Testing";
+
+            using (new HttpClientAndRequestWrapperSession(
+                new HttpWebRequestWrapperInterceptorCreator(
+                    x => x.HttpWebResponseCreator.Create(fakeResponse))))
+            {
+                new System.Net.Http.HttpClient()
+                    .GetStringAsync("https://fakeSite.fake")
+                    .Result
+                    .ShouldEqual(fakeResponse);
             }
         }
 

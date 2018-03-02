@@ -19,7 +19,7 @@ namespace HttpWebRequestWrapper
     /// <para />
     /// NOTE: This class does not support concurrency.  It relies on manipulating a static field
     /// (<see cref="M:WebRequest.PrefixList"/>).  You can only create one Session at a time for a given
-    /// App Domain.
+    /// App Domain.  However, you can run concurrent code within the Session.
     /// </summary>
     public class HttpWebRequestWrapperSession : IDisposable
     {
@@ -58,7 +58,7 @@ namespace HttpWebRequestWrapper
         /// Reset the <see cref="M:WebRequest.PrefixList"/>; restoring
         /// default behavior.
         /// </summary>
-        public void Dispose()
+        public virtual void Dispose()
         {
             SetWebRequestPrefixList(_originalWebRequestPrefixList);
         }
