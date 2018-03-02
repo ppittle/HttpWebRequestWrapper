@@ -32,7 +32,7 @@ namespace HttpWebRequestWrapper.HttpClient.Extensions
         /// except it uses <paramref name="webRequest"/> rather than creating a <see cref="HttpWebRequest"/>
         /// directly.
         /// </summary>
-        public static async Task PrepareWebRequest(
+        public static void PrepareWebRequest(
             this HttpClientHandler httpClientHandler,
             HttpWebRequest webRequest, 
             HttpRequestMessage requestMessage)
@@ -50,16 +50,6 @@ namespace HttpWebRequestWrapper.HttpClient.Extensions
             _setRequestHeaders.Invoke(null, new object[] { webRequest, requestMessage });
             // HttpClientHandler.SetContentHeaders(HttpWebRequest webRequest, HttpRequestMessage request);
             _setContentHeaders.Invoke(null, new object[] { webRequest, requestMessage });
-
-            // copy request stream
-            if (null == requestMessage.Content)
-            {
-                webRequest.ContentLength = 0;
-            }
-            else
-            {
-                await requestMessage.Content.CopyToAsync(webRequest.GetRequestStream());
-            }
         }
     }
 }

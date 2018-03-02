@@ -66,7 +66,7 @@ namespace HttpWebRequestWrapper.HttpClient
             var handler = (HttpClientHandler)taskAction.Target;
 
             // copy the request message to the http web request we just built
-            handler.PrepareWebRequest(httpWebRequest, requestMessage).Wait();
+            handler.PrepareWebRequest(httpWebRequest, requestMessage);
 
             // save the http web request back to the request state - 
             // now when the intercepted handler continues executing
