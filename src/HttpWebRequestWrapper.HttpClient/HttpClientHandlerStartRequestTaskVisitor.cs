@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Reflection;
@@ -72,8 +73,45 @@ namespace HttpWebRequestWrapper.HttpClient
             // now when the intercepted handler continues executing
             // StartRequest, it will be using our custom HttpWebRequest!!
             requestStateWrapper.SetHttpWebRequest(httpWebRequest);
+
+            // we'll also need to intercept how the HttpClientHandler 
+            // acquires the request stream to make sure we can intercept
+            // the request body, so replace the GetRequestStreamCallback
+            // continuation
+            handler.SetGetRequestStreamCallback(asyncResult => CustomGetRequestStreamCallback(asyncResult, handler));
         }
 
+        /// <summary>
+        /// <see cref="HttpClientHandler"/>'s GetRequestStreamCallback uses an
+        /// overload of EndGetRequestStream that <see cref="HttpWebRequestWrapperRecorder"/>
+        /// can't intercept (method isn't virtual). So we need to intercept the call
+        /// and force using <see cref="HttpWebRequestWrapperRecorder.EndGetRequestStream(System.IAsyncResult)"/>
+        /// (which is intercepted)
+        /// </summary>
+        private void CustomGetRequestStreamCallback(IAsyncResult ar, HttpClientHandler httpClientHandler)
+        {
+            // build a wrapper around the Request State stored in AsyncState
+            var requestStateWrapper = new HttpClientHandlerRequestStateWrapper(ar.AsyncState);
+
+            // get the HttpRequestMessage we've intercepted
+            var requestMessage = requestStateWrapper.GetHttpRequestMessage();
+
+            // load the HttpWebRequest we've already intercpeted and replaced
+            var httpWebRequest = requestStateWrapper.GetHttpWebRequest();
+
+            // get a copy of the request streams
+            var requestStream = httpWebRequest.GetRequestStream();
+
+            // copy the request message content to the request stream
+            requestMessage.Content.CopyToAsync(requestStream).Wait();
+
+            // save the request stream to the requet state
+            requestStateWrapper.SetRequestStream(requestStream);
+
+            // continue on with StartGettingResponse
+            httpClientHandler.StartGettingResponse(ar.AsyncState);
+        }
+        
         /// <summary>
         /// Reflection helper for working with the nested  private class 
         /// <see cref="T:System.Net.Http.HttpClientHandler.RequestState"/>
@@ -82,6 +120,7 @@ namespace HttpWebRequestWrapper.HttpClient
         {
             private static readonly FieldInfo _httpRequestMessageField;
             private static readonly FieldInfo _httpWebRequestField;
+            private static readonly FieldInfo _requestStreamField;
 
             static HttpClientHandlerRequestStateWrapper()
             {
@@ -102,6 +141,12 @@ namespace HttpWebRequestWrapper.HttpClient
                         .GetField(
                             "webRequest", 
                             BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+
+                _requestStreamField =
+                    httpClientHandlerRequestStateType
+                        .GetField(
+                            "requestStream",
+                            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             }
 
             private readonly object _requestState;
@@ -117,9 +162,19 @@ namespace HttpWebRequestWrapper.HttpClient
                     _httpRequestMessageField.GetValue(_requestState);
             }
 
+            public HttpWebRequest GetHttpWebRequest()
+            {
+                return (HttpWebRequest) _httpWebRequestField.GetValue(_requestState);
+            }
+
             public void SetHttpWebRequest(HttpWebRequest webRequest)
             {
                 _httpWebRequestField.SetValue(_requestState, webRequest);
+            }
+
+            public void SetRequestStream(Stream stream)
+            {
+                _requestStreamField.SetValue(_requestState, stream);
             }
         }
     }

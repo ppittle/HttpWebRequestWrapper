@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -27,6 +28,14 @@ namespace HttpWebRequestWrapper.HttpClient.Extensions
             typeof(HttpClientHandler)
                 .GetMethod("SetContentHeaders", BindingFlags.NonPublic | BindingFlags.Static);
 
+        private static readonly FieldInfo _getRequestStreamCallback =
+            typeof(HttpClientHandler)
+                .GetField("getRequestStreamCallback", BindingFlags.NonPublic | BindingFlags.Instance);
+
+        private static readonly MethodInfo _startGettingResponse =
+            typeof(HttpClientHandler)
+                .GetMethod("StartGettingResponse", BindingFlags.NonPublic | BindingFlags.Instance);
+
         /// <summary>
         /// This is basically just <see cref="T:System.Net.Http.HttpClientHandler.CreateAndPrepareWebRequest"/>,
         /// except it uses <paramref name="webRequest"/> rather than creating a <see cref="HttpWebRequest"/>
@@ -50,6 +59,20 @@ namespace HttpWebRequestWrapper.HttpClient.Extensions
             _setRequestHeaders.Invoke(null, new object[] { webRequest, requestMessage });
             // HttpClientHandler.SetContentHeaders(HttpWebRequest webRequest, HttpRequestMessage request);
             _setContentHeaders.Invoke(null, new object[] { webRequest, requestMessage });
+        }
+
+        public static void SetGetRequestStreamCallback(
+            this HttpClientHandler httpClientHandler,
+            AsyncCallback getRequestStreamCallback)
+        {
+            _getRequestStreamCallback.SetValue(httpClientHandler, getRequestStreamCallback);
+        }
+
+        public static void StartGettingResponse(
+            this HttpClientHandler httpClientHandler,
+            object requestState)
+        {
+            _startGettingResponse.Invoke(httpClientHandler, new[] {requestState});
         }
     }
 }

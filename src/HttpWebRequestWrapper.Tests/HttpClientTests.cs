@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 using HttpWebRequestWrapper.HttpClient;
 using Should;
@@ -20,13 +21,14 @@ namespace HttpWebRequestWrapper.Tests
         }
 
         // WARNING!! Makes live request
-        [Fact]
+        [Fact(Timeout = 10000)]
         public async Task CanRecord()
         {
             // ARRANGE
-            var url = "http://www.github.com/";
+            var url = "https://www.github.com/";
             
             var recordingSession = new RecordingSession();
+
             HttpResponseMessage response;
 
             // ACT
@@ -48,7 +50,7 @@ namespace HttpWebRequestWrapper.Tests
         }
 
         // WARNING!! Makes live request
-        [Fact]
+        [Fact(Timeout = 10000)]
         public async Task CanRecordWebRequestException()
         {
             // ARRANGE
@@ -101,6 +103,107 @@ namespace HttpWebRequestWrapper.Tests
         }
 
         [Fact]
+        public async Task CanInterceptPost()
+        {
+            // ARRANGE
+            var requestBody = @"<xml>test</xml>";
+            var requestUrl = new Uri("http://stackoverflow.com");
+            var responseBody = "Test Response";
+
+            var responseCreator = new Func<InterceptedRequest, HttpWebResponse>(req =>
+            {
+                if (req.HttpWebRequest.RequestUri == requestUrl &&
+                    req.HttpWebRequest.Method == "POST" &&
+                    req.RequestPayload == requestBody)
+                {
+                    return req.HttpWebResponseCreator.Create(responseBody);
+                }
+
+                throw new Exception("Coulnd't match request");
+            });
+
+            HttpResponseMessage response;
+
+            // ACT
+            using (new HttpClientAndRequestWrapperSession(
+                    new HttpWebRequestWrapperInterceptorCreator(responseCreator)))
+            {
+                var httpClient = new System.Net.Http.HttpClient();
+
+                response = await httpClient.PostAsync(requestUrl, new StringContent(requestBody));
+            }
+
+            // ASSERT
+            response.ShouldNotBeNull();
+
+            (await response.Content.ReadAsStringAsync()).ShouldEqual(responseBody);
+        }
+
+        [Fact]
+        public void CanInterceptWhenHttpClientUsesWebRequestHandler()
+        {
+
+        }
+
+        [Fact]
+        public void CanInterceptWhenHttpClientSetsBaseAddress()
+        {
+
+        }
+        [Fact]
+        public async Task CanInterceptCustomRequestMessage()
+        {
+            // ARRANGE
+            var requestBody = @"<xml>test</xml>";
+            var requestUrl = new Uri("http://stackoverflow.com");
+            var responseBody = "Test Response";
+
+            var responseCreator = new Func<InterceptedRequest, HttpWebResponse>(req =>
+            {
+                if (req.HttpWebRequest.RequestUri == requestUrl &&
+                    req.HttpWebRequest.Method == "POST" &&
+                    req.RequestPayload == requestBody)
+                {
+                    return req.HttpWebResponseCreator.Create(responseBody);
+                }
+
+                throw new Exception("Coulnd't match request");
+            });
+
+            var requestMessage = new HttpRequestMessage(HttpMethod.Post, requestUrl)
+            {
+                Content = new StringContent(requestBody, Encoding.UTF8, "text/xml")
+            };
+
+            HttpResponseMessage response;
+
+            // ACT
+            using (new HttpClientAndRequestWrapperSession(
+                new HttpWebRequestWrapperInterceptorCreator(responseCreator)))
+            {
+                var httpClient = new System.Net.Http.HttpClient();
+
+                response = await httpClient.SendAsync(requestMessage);
+            }
+
+            // ASSERT
+            response.ShouldNotBeNull();
+
+            (await response.Content.ReadAsStringAsync()).ShouldEqual(responseBody);
+        }
+
+
+        // TODO - can intercept WebRequestHandler (inherits from HttpClientHandler)
+        // TODO - cna intercept when HttpClient has BaseAddress set
+        // TODO - test when using custom request message
+        // TODO - test when using Send with HttpCompletionOption
+        // TODO - can record post
+        // TODO - can record binary response stream
+        // TODO - can record post request payload
+        // TODO - can record binary request payload
+        // TODO - can match on binary request payload
+
+        [Fact(Timeout = 3000)]
         public async Task CanSupportMultipleConcurrentHttpClients()
         {
             // ARRANGE
