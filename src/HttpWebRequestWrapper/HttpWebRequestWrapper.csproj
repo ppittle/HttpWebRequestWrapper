@@ -49,6 +49,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Extensions\RecordedRequestExtensions.cs" />
+    <Compile Include="Extensions\StreamExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="HttpWebRequestWrapperDelegateCreator.cs" />
     <Compile Include="HttpWebRequestWrapperInterceptor.cs" />

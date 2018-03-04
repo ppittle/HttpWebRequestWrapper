@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net;
+using System.Text;
 using HttpWebRequestWrapper.Tests.Properties;
 using Newtonsoft.Json;
 using Should;
@@ -660,6 +662,141 @@ namespace HttpWebRequestWrapper.Tests
 
             using (var sr = new StreamReader(response2.GetResponseStream()))
                 sr.ReadToEnd().ShouldEqual(recordedRequest2.ResponseBody.SerializedStream);
+        }
+
+        [Fact]
+        public void CanPlaybackZippedResponse()
+        {
+            // ARRANGE
+            var recordedRequest = new RecordedRequest
+            {
+                Url = "http://fakeSite.fake",
+                Method = "GET",
+                ResponseBody = new RecordedStream
+                {
+                    SerializedStream = "Response 1",
+                    IsGzippedCompressed = true
+                },
+                ResponseHeaders = new RecordedHeaders
+                {
+                    {"Content-Encoding", new []{"gzip"} }
+                }
+            };
+
+            var recordingSession = new RecordingSession
+            {
+                RecordedRequests = new List<RecordedRequest> { recordedRequest }
+            };
+
+            var requestBuilder = new RecordingSessionInterceptorRequestBuilder(recordingSession);
+
+            IWebRequestCreate creator = new HttpWebRequestWrapperInterceptorCreator(requestBuilder);
+
+            var request = (HttpWebRequest)creator.Create(new Uri(recordedRequest.Url));
+            request.AutomaticDecompression = DecompressionMethods.GZip;
+
+            // ACT
+            var response = request.GetResponse();
+
+            // ASSERT
+            response.ShouldNotBeNull();
+
+            using (var sr = new StreamReader(response.GetResponseStream()))
+                sr.ReadToEnd().ShouldEqual(recordedRequest.ResponseBody.SerializedStream);
+        }
+
+        [Fact]
+        public void CanPlaybackDeflatedResponse()
+        {
+            // ARRANGE
+            var recordedRequest = new RecordedRequest
+            {
+                Url = "http://fakeSite.fake",
+                Method = "GET",
+                ResponseBody = new RecordedStream
+                {
+                    SerializedStream = "Response 1",
+                    IsDefalteCompressed = true
+                },
+                ResponseHeaders = new RecordedHeaders
+                {
+                    {"Content-Encoding", new []{"deflate"} }
+                }
+            };
+
+            var recordingSession = new RecordingSession
+            {
+                RecordedRequests = new List<RecordedRequest> { recordedRequest }
+            };
+
+            var requestBuilder = new RecordingSessionInterceptorRequestBuilder(recordingSession);
+
+            IWebRequestCreate creator = new HttpWebRequestWrapperInterceptorCreator(requestBuilder);
+
+            var request = (HttpWebRequest)creator.Create(new Uri(recordedRequest.Url));
+            request.AutomaticDecompression = DecompressionMethods.Deflate;
+            
+            // ACT
+            var response = request.GetResponse();
+
+            // ASSERT
+            response.ShouldNotBeNull();
+
+            using (var sr = new StreamReader(response.GetResponseStream()))
+                sr.ReadToEnd().ShouldEqual(recordedRequest.ResponseBody.SerializedStream);
+        }
+
+        [Fact]
+        public void MatchesOnZippedPayload()
+        {
+            // ARRANGE
+            var recordedRequest = new RecordedRequest
+            {
+                Url = "http://fakeSite.fake",
+                Method = "POST",
+                RequestPayload = new RecordedStream
+                {
+                    SerializedStream = "Request 1",
+                    IsGzippedCompressed = true
+                },
+                RequestHeaders = new RecordedHeaders
+                {
+                    {"Content-Type", new []{"text/plain" }}
+                },
+                ResponseBody = "Response 1"
+            };
+
+            var recordingSession = new RecordingSession
+            {
+                RecordedRequests = new List<RecordedRequest> { recordedRequest }
+            };
+
+            var requestBuilder = new RecordingSessionInterceptorRequestBuilder(recordingSession);
+
+            IWebRequestCreate creator = new HttpWebRequestWrapperInterceptorCreator(requestBuilder);
+
+            var request = creator.Create(new Uri(recordedRequest.Url));
+            request.Method = "POST";
+            request.ContentType = "text/plain";
+
+            using (var input = new MemoryStream(Encoding.UTF8.GetBytes(recordedRequest.RequestPayload.SerializedStream)))
+            using (var compressed = new MemoryStream())
+            using (var zip = new GZipStream(compressed, CompressionMode.Compress, leaveOpen: true))
+            {
+                input.CopyTo(zip);
+                zip.Close();
+                compressed.Seek(0, SeekOrigin.Begin);
+                compressed.CopyTo(request.GetRequestStream());
+            }
+            
+            // ACT
+            var response = request.GetResponse();
+
+            // ASSERT
+            response.ShouldNotBeNull();
+            
+            using (var sr = new StreamReader(response.GetResponseStream()))
+                sr.ReadToEnd().ShouldEqual(recordedRequest.ResponseBody.SerializedStream);
         }
 
         [Fact]

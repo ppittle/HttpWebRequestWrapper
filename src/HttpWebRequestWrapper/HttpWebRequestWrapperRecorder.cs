@@ -101,7 +101,7 @@ namespace HttpWebRequestWrapper
                     ? new RecordedStream() 
                     : new RecordedStream(
                         _shadowCopyRequestStream.ShadowCopy.ToArray(),
-                        contentType: ContentType)
+                        this)
             };
             
             RecordedRequests.Add(recordedRequest);
@@ -165,8 +165,7 @@ namespace HttpWebRequestWrapper
                         recordedRequest.ResponseBody = 
                             new RecordedStream(
                                 memoryStream.ToArray(),
-                                response.CharacterSet,
-                                response.ContentType);
+                                response);
 
                         // replace the default stream in response with the copy
                         ReflectionExtensions.SetField(response, "m_ConnectStream", memoryStream);

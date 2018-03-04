@@ -19,8 +19,8 @@ namespace HttpWebRequestWrapper
 {
     /// <summary>
     /// Helper on top of <see cref="HttpWebResponseCreator"/> that 
-    /// pre-populates <see cref="_responseUri"/> and <see cref="_method"/> when
-    /// building <see cref="HttpWebResponse"/>.
+    /// pre-populates <see cref="_responseUri"/>, <see cref="_method"/> 
+    /// and <see cref="_automaticDecompression"/> when building <see cref="HttpWebResponse"/>.
     /// <para />
     /// Use these methods to build a real functioning <see cref="HttpWebResponse"/>
     /// without having to deal with the reflection head-aches of doing it manually.
@@ -29,6 +29,7 @@ namespace HttpWebRequestWrapper
     {
         private readonly Uri _responseUri;
         private readonly string _method;
+        private readonly DecompressionMethods _automaticDecompression;
 
         /// <summary>
         /// Creates a new <see cref="HttpWebRequestWrapperInterceptorCreator"/>
@@ -38,10 +39,12 @@ namespace HttpWebRequestWrapper
         /// </summary>
         public HttpWebResponseInterceptorCreator(
             Uri responseUri, 
-            string method)
+            string method, 
+            DecompressionMethods automaticDecompression)
         {
             _responseUri = responseUri;
             _method = method;
+            _automaticDecompression = automaticDecompression;
         }
 
         /// <summary>
@@ -72,7 +75,8 @@ namespace HttpWebRequestWrapper
                 _method,
                 statusCode,
                 responseBody,
-                responseHeaders);
+                responseHeaders,
+                _automaticDecompression);
         }
 
         /// <summary>
@@ -108,7 +112,7 @@ namespace HttpWebRequestWrapper
             Stream responseStream,
             HttpStatusCode statusCode = HttpStatusCode.OK,
             WebHeaderCollection responseHeaders = null,
-            DecompressionMethods decompressionMethod = DecompressionMethods.None,
+            DecompressionMethods? decompressionMethod = null,
             long? contentLength = null)
         {
             return HttpWebResponseCreator.Create(
@@ -117,7 +121,7 @@ namespace HttpWebRequestWrapper
                 statusCode,
                 responseStream,
                 responseHeaders ?? new WebHeaderCollection(),
-                decompressionMethod,
+                decompressionMethod ?? _automaticDecompression,
                 contentLength: contentLength);
         }
 
@@ -181,7 +185,7 @@ namespace HttpWebRequestWrapper
             HttpStatusCode statusCode,
             Stream responseStream,
             WebHeaderCollection responseHeaders,
-            DecompressionMethods decompressionMethod = DecompressionMethods.None,
+            DecompressionMethods? decompressionMethod = null,
             string mediaType = null,
             long? contentLength = null,
             string statusDescription = null,
@@ -196,7 +200,7 @@ namespace HttpWebRequestWrapper
                 statusCode,
                 responseStream,
                 responseHeaders,
-                decompressionMethod,
+                decompressionMethod ?? _automaticDecompression,
                 mediaType,
                 contentLength,
                 statusDescription,
@@ -237,12 +241,18 @@ namespace HttpWebRequestWrapper
         /// <para />
         /// Use this to also set Cookies via <see cref="HttpResponseHeader.SetCookie"/>
         /// </param>
+        /// <param name="decompressionMethod">
+        /// OPTIONAL: Controls if <see cref="HttpWebResponse"/> will decompress
+        /// <paramref name="responseBody"/> in its constructor.  
+        /// Default is <see cref="DecompressionMethods.None"/>
+        /// </param>
         public static HttpWebResponse Create(
             Uri responseUri,
             string method,
             HttpStatusCode statusCode,
             string responseBody,
-            WebHeaderCollection responseHeaders = null)
+            WebHeaderCollection responseHeaders = null,
+            DecompressionMethods decompressionMethod = DecompressionMethods.None)
         {
             // allow responseBody to be null - but change to empty string
             responseBody = responseBody ?? string.Empty;
@@ -255,7 +265,8 @@ namespace HttpWebRequestWrapper
                 method,
                 statusCode,
                 responseStream,
-                responseHeaders);
+                responseHeaders,
+                decompressionMethod);
         }
 
         /// <summary>

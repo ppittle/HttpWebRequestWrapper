@@ -3,7 +3,6 @@ using System.IO;
 using System.Net;
 using System.Reflection;
 using System.Threading;
-using HttpWebRequestWrapper.IO;
 
 namespace HttpWebRequestWrapper
 {
@@ -57,9 +56,9 @@ namespace HttpWebRequestWrapper
                 RequestPayload = 
                     new RecordedStream(
                         _requestStream.ToArray(),
-                        contentType: ContentType),
+                        this),
                 HttpWebRequest = this,
-                HttpWebResponseCreator = new HttpWebResponseInterceptorCreator(RequestUri, Method),
+                HttpWebResponseCreator = new HttpWebResponseInterceptorCreator(RequestUri, Method, AutomaticDecompression),
                 PassThroughResponse = () =>
                 {
                     // if we are going to pass through - we need to use the base.GetRequest
