@@ -57,7 +57,7 @@ namespace HttpWebRequestWrapper.Extensions
                 return true;
             }
             
-            if (string.IsNullOrEmpty(request.ResponseBody.SerializedStream))
+            if (string.IsNullOrEmpty(request?.ResponseBody?.SerializedStream))
             {
                 recordedException = new WebException(
                     request.ResponseException.Message,
