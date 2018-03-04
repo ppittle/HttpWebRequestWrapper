@@ -43,16 +43,6 @@ namespace HttpWebRequestWrapper
         }
 
         /// <inheritdoc />
-        public override IAsyncResult BeginGetRequestStream(AsyncCallback callback, object state)
-        {
-            var asyncResult = new DummyAsyncResult(new ManualResetEvent(true), state);
-
-            callback(asyncResult);
-
-            return asyncResult;
-        }
-
-        /// <inheritdoc />
         public override Stream EndGetRequestStream(IAsyncResult asyncResult)
         {
             return _requestStream;
