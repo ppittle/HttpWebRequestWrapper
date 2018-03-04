@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -7,6 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using HttpWebRequestWrapper.Tests.Properties;
+using Newtonsoft.Json;
 using Should;
 using Xunit;
 
@@ -148,6 +150,38 @@ namespace HttpWebRequestWrapper.Tests
             // ASSERT
             using (var sr = new StreamReader(response.GetResponseStream()))
                 sr.ReadToEnd().ShouldEqual(fakeResponseBody);
+        }
+
+        [Fact]
+        public void CanSpoofImageFileResponse()
+        {
+            // ARRANGE
+            var url = new Uri("http://localhost/iisstart.png");
+
+            string json;
+            using (var resource = GetType().Assembly.GetManifestResourceStream("HttpWebRequestWrapper.Tests.RecordingSession.json"))
+            using (var sr = new StreamReader(resource))
+                json = sr.ReadToEnd();
+
+            var recordingSession = JsonConvert.DeserializeObject<RecordingSession>(json);
+
+            Image image;
+
+            // ACT
+            using (new HttpWebRequestWrapperSession(
+                new HttpWebRequestWrapperInterceptorCreator(
+                    new RecordingSessionInterceptorRequestBuilder(recordingSession))))
+            {
+                var request = WebRequest.Create(url);
+                var response = (HttpWebResponse)request.GetResponse();
+
+                image = Image.FromStream(response.GetResponseStream());
+            }
+
+            // ASSERT
+            image.ShouldNotBeNull();
+            image.Size.Height.ShouldBeGreaterThan(10);
+            image.Size.Width.ShouldBeGreaterThan(10);
         }
 
         [Fact]
@@ -386,10 +420,10 @@ namespace HttpWebRequestWrapper.Tests
 
             var responseCreator = new Func<InterceptedRequest, HttpWebResponse>(req =>
             {
-                if (req.RequestPayload == fakePayload1)
+                if (req.RequestPayload.SerializedStream == fakePayload1)
                     return req.HttpWebResponseCreator.Create(fakePayload1Response);
 
-                if (req.RequestPayload == fakePayload2)
+                if (req.RequestPayload.SerializedStream == fakePayload2)
                     return req.HttpWebResponseCreator.Create(fakePayload2Response);
 
                 throw new Exception("Couldn't match request to response");
@@ -570,7 +604,7 @@ namespace HttpWebRequestWrapper.Tests
 
             var responseCreator = new Func<InterceptedRequest, HttpWebResponse>(req =>
             {
-                if (req.RequestPayload != requestPayload)
+                if (req.RequestPayload.SerializedStream != requestPayload)
                     throw new Exception($"{nameof(requestPayload)} was not parsed correctly.");
 
                 return req.HttpWebResponseCreator.Create(responseBody);

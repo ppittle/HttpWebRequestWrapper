@@ -96,7 +96,12 @@ namespace HttpWebRequestWrapper
                 Method = Method,
                 RequestCookieContainer = CookieContainer,
                 RequestHeaders = Headers,
-                RequestPayload = _shadowCopyRequestStream.ReadToEnd()
+                RequestPayload = 
+                    null == _shadowCopyRequestStream
+                    ? new RecordedStream() 
+                    : new RecordedStream(
+                        _shadowCopyRequestStream.ShadowCopy.ToArray(),
+                        contentType: ContentType)
             };
             
             RecordedRequests.Add(recordedRequest);
@@ -157,11 +162,11 @@ namespace HttpWebRequestWrapper
                         // seek to beginning so we can read the memory stream
                         memoryStream.Seek(0, SeekOrigin.Begin);
 
-                        using (var sr = new StreamReader(memoryStream))
-                            recordedRequest.ResponseBody = sr.ReadToEnd();
-
-                        // reset the stream - stream reader closes the first one
-                        memoryStream = new MemoryStream(memoryStream.ToArray());
+                        recordedRequest.ResponseBody = 
+                            new RecordedStream(
+                                memoryStream.ToArray(),
+                                response.CharacterSet,
+                                response.ContentType);
 
                         // replace the default stream in response with the copy
                         ReflectionExtensions.SetField(response, "m_ConnectStream", memoryStream);

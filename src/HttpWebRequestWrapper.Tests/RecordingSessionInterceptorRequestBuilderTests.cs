@@ -108,10 +108,10 @@ namespace HttpWebRequestWrapper.Tests
             response2.ShouldNotBeNull();
 
             using (var sr = new StreamReader(response1.GetResponseStream()))
-                sr.ReadToEnd().ShouldEqual(recordedRequest1.ResponseBody);
+                sr.ReadToEnd().ShouldEqual(recordedRequest1.ResponseBody.SerializedStream);
 
             using (var sr = new StreamReader(response2.GetResponseStream()))
-                sr.ReadToEnd().ShouldEqual(recordedRequest2.ResponseBody);
+                sr.ReadToEnd().ShouldEqual(recordedRequest2.ResponseBody.SerializedStream);
         }
 
         [Fact]
@@ -329,7 +329,7 @@ namespace HttpWebRequestWrapper.Tests
             response.ShouldNotBeNull();
 
             using (var sr = new StreamReader(response.GetResponseStream()))
-                sr.ReadToEnd().ShouldEqual(recordedRequest.ResponseBody);
+                sr.ReadToEnd().ShouldEqual(recordedRequest.ResponseBody.SerializedStream);
         }
 
         [Fact]
@@ -446,13 +446,13 @@ namespace HttpWebRequestWrapper.Tests
             response2b.ShouldNotBeNull();
 
             using (var sr = new StreamReader(response1a.GetResponseStream()))
-                sr.ReadToEnd().ShouldEqual(recordedRequest1.ResponseBody);
+                sr.ReadToEnd().ShouldEqual(recordedRequest1.ResponseBody.SerializedStream);
 
             using (var sr = new StreamReader(response1b.GetResponseStream()))
-                sr.ReadToEnd().ShouldEqual(recordedRequest1.ResponseBody);
+                sr.ReadToEnd().ShouldEqual(recordedRequest1.ResponseBody.SerializedStream);
 
             using (var sr = new StreamReader(response2a.GetResponseStream()))
-                sr.ReadToEnd().ShouldEqual(recordedRequest2.ResponseBody);
+                sr.ReadToEnd().ShouldEqual(recordedRequest2.ResponseBody.SerializedStream);
 
             response1c.StatusCode.ShouldEqual(HttpStatusCode.NotFound);
             response2b.StatusCode.ShouldEqual(HttpStatusCode.NotFound);
@@ -497,10 +497,10 @@ namespace HttpWebRequestWrapper.Tests
             response2.ShouldNotBeNull();
 
             using (var sr = new StreamReader(response1.GetResponseStream()))
-                sr.ReadToEnd().ShouldEqual(recordedRequest1.ResponseBody);
+                sr.ReadToEnd().ShouldEqual(recordedRequest1.ResponseBody.SerializedStream);
 
             using (var sr = new StreamReader(response2.GetResponseStream()))
-                sr.ReadToEnd().ShouldEqual(recordedRequest2.ResponseBody);
+                sr.ReadToEnd().ShouldEqual(recordedRequest2.ResponseBody.SerializedStream);
         }
 
         [Fact]
@@ -544,10 +544,10 @@ namespace HttpWebRequestWrapper.Tests
             response2.ShouldNotBeNull();
 
             using (var sr = new StreamReader(response1.GetResponseStream()))
-                sr.ReadToEnd().ShouldEqual(recordedRequest1.ResponseBody);
+                sr.ReadToEnd().ShouldEqual(recordedRequest1.ResponseBody.SerializedStream);
 
             using (var sr = new StreamReader(response2.GetResponseStream()))
-                sr.ReadToEnd().ShouldEqual(recordedRequest2.ResponseBody);
+                sr.ReadToEnd().ShouldEqual(recordedRequest2.ResponseBody.SerializedStream);
         }
 
         [Fact]
@@ -559,14 +559,19 @@ namespace HttpWebRequestWrapper.Tests
                 Url = "http://fakeSite.fake",
                 Method = "POST",
                 RequestPayload = "Request 1",
+                RequestHeaders = new RecordedHeaders
+                {
+                    {"Content-Type", new []{"text/plain" }}
+                },
                 ResponseBody = "Response 1"
             };
 
             var recordedRequest2 = new RecordedRequest
             {
                 Url = recordedRequest1.Url,
-                Method = "POST",
+                Method = recordedRequest1.Method,
                 RequestPayload = "Request 2",
+                RequestHeaders = recordedRequest1.RequestHeaders,
                 ResponseBody = "Response 2"
             };
             
@@ -581,13 +586,15 @@ namespace HttpWebRequestWrapper.Tests
 
             var request1 = creator.Create(new Uri(recordedRequest1.Url));
             request1.Method = "POST";
-            using (var sw = new StreamWriter(request1.GetRequestStream()))
-                sw.Write(recordedRequest1.RequestPayload);
+            request1.ContentType = "text/plain";
+
+            recordedRequest1.RequestPayload.ToStream().CopyTo(request1.GetRequestStream());
 
             var request2 = creator.Create(new Uri(recordedRequest2.Url));
             request2.Method = "POST";
-            using (var sw = new StreamWriter(request2.GetRequestStream()))
-                sw.Write(recordedRequest2.RequestPayload);
+            request2.ContentType = "text/plain";
+            
+            recordedRequest2.RequestPayload.ToStream().CopyTo(request2.GetRequestStream());
 
             // ACT
             var response1 = request1.GetResponse();
@@ -598,10 +605,10 @@ namespace HttpWebRequestWrapper.Tests
             response2.ShouldNotBeNull();
 
             using (var sr = new StreamReader(response1.GetResponseStream()))
-                sr.ReadToEnd().ShouldEqual(recordedRequest1.ResponseBody);
+                sr.ReadToEnd().ShouldEqual(recordedRequest1.ResponseBody.SerializedStream);
 
             using (var sr = new StreamReader(response2.GetResponseStream()))
-                sr.ReadToEnd().ShouldEqual(recordedRequest2.ResponseBody);
+                sr.ReadToEnd().ShouldEqual(recordedRequest2.ResponseBody.SerializedStream);
         }
 
         [Fact]
@@ -649,10 +656,10 @@ namespace HttpWebRequestWrapper.Tests
             response2.ShouldNotBeNull();
 
             using (var sr = new StreamReader(response1.GetResponseStream()))
-                sr.ReadToEnd().ShouldEqual(recordedRequest1.ResponseBody);
+                sr.ReadToEnd().ShouldEqual(recordedRequest1.ResponseBody.SerializedStream);
 
             using (var sr = new StreamReader(response2.GetResponseStream()))
-                sr.ReadToEnd().ShouldEqual(recordedRequest2.ResponseBody);
+                sr.ReadToEnd().ShouldEqual(recordedRequest2.ResponseBody.SerializedStream);
         }
 
         [Fact]
@@ -681,7 +688,7 @@ namespace HttpWebRequestWrapper.Tests
             response.ShouldNotBeNull();
 
             using (var sr = new StreamReader(response.GetResponseStream()))
-                sr.ReadToEnd().ShouldEqual(recordedRequest.ResponseBody);
+                sr.ReadToEnd().ShouldEqual(recordedRequest.ResponseBody.SerializedStream);
         }
 
         [Fact]
@@ -818,7 +825,7 @@ namespace HttpWebRequestWrapper.Tests
             webExceptionResponse.ContentLength.ShouldBeGreaterThan(0);
 
             using (var sr = new StreamReader(webExceptionResponse.GetResponseStream()))
-                sr.ReadToEnd().ShouldEqual(recordedRequest.ResponseBody);
+                sr.ReadToEnd().ShouldEqual(recordedRequest.ResponseBody.SerializedStream);
         }
 
         [Fact]

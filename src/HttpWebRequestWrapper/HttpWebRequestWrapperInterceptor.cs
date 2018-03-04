@@ -54,7 +54,10 @@ namespace HttpWebRequestWrapper
             HttpWebResponse passThroughShadowCopy = null;
             var interceptedRequest = new InterceptedRequest
             {
-                RequestPayload = _requestStream.ReadToEnd(),
+                RequestPayload = 
+                    new RecordedStream(
+                        _requestStream.ToArray(),
+                        contentType: ContentType),
                 HttpWebRequest = this,
                 HttpWebResponseCreator = new HttpWebResponseInterceptorCreator(RequestUri, Method),
                 PassThroughResponse = () =>

@@ -22,7 +22,7 @@ namespace HttpWebRequestWrapper
         /// Don't try and read this from <see cref="HttpWebRequest"/>, the request stream
         /// has probably already been closed.
         /// </summary>
-        public string RequestPayload { get; set; }
+        public RecordedStream RequestPayload { get; set; }
         /// <summary>
         /// The <see cref="HttpWebRequestWrapperInterceptor"/> that has been intercepted.
         /// Use this to read <see cref="System.Net.HttpWebRequest.Headers"/>, etc

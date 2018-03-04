@@ -215,10 +215,7 @@ namespace HttpWebRequestWrapper
                     StringComparison.InvariantCultureIgnoreCase);
 
             var requestPayloadMatches =
-                string.Equals(
-                    interceptedRequest.RequestPayload ?? "",
-                    recordedRequest.RequestPayload ?? "",
-                    StringComparison.InvariantCultureIgnoreCase);
+                true == interceptedRequest?.RequestPayload.Equals(recordedRequest.RequestPayload);
 
             var requestHeadersMatch =
                 recordedRequest.RequestHeaders.Equals(interceptedRequest.HttpWebRequest.Headers);
@@ -244,7 +241,7 @@ namespace HttpWebRequestWrapper
                 throw recordedException;
 
             return interceptedRequest.HttpWebResponseCreator.Create(
-                recordedRequest.ResponseBody,
+                recordedRequest.ResponseBody.ToStream(),
                 recordedRequest.ResponseStatusCode,
                 headers);
         }

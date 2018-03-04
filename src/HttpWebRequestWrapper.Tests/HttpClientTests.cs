@@ -46,7 +46,7 @@ namespace HttpWebRequestWrapper.Tests
 
             recordingSession.RecordedRequests[0].Url.ShouldEqual(url);
             recordingSession.RecordedRequests[0].ResponseStatusCode.ShouldEqual(HttpStatusCode.OK);
-            recordingSession.RecordedRequests[0].ResponseBody.ShouldContain("<html");
+            recordingSession.RecordedRequests[0].ResponseBody.SerializedStream.ShouldContain("<html");
         }
 
         // WARNING!! Makes live request
@@ -72,7 +72,7 @@ namespace HttpWebRequestWrapper.Tests
             recordingSession.RecordedRequests[0].ResponseStatusCode.ShouldEqual(HttpStatusCode.BadRequest);
             
             // HttpClient suppresses exceptions - so response will just be in ResponseBody
-            recordingSession.RecordedRequests[0].ResponseBody.ShouldContain("<html");
+            recordingSession.RecordedRequests[0].ResponseBody.SerializedStream.ShouldContain("<html");
             recordingSession.RecordedRequests[0].ResponseException.ShouldBeNull();
         }
 
@@ -114,7 +114,7 @@ namespace HttpWebRequestWrapper.Tests
             {
                 if (req.HttpWebRequest.RequestUri == requestUrl &&
                     req.HttpWebRequest.Method == "POST" &&
-                    req.RequestPayload == requestBody)
+                    req.RequestPayload.SerializedStream == requestBody)
                 {
                     return req.HttpWebResponseCreator.Create(responseBody);
                 }
@@ -162,7 +162,7 @@ namespace HttpWebRequestWrapper.Tests
             {
                 if (req.HttpWebRequest.RequestUri == requestUrl &&
                     req.HttpWebRequest.Method == "POST" &&
-                    req.RequestPayload == requestBody)
+                    req.RequestPayload.SerializedStream == requestBody)
                 {
                     return req.HttpWebResponseCreator.Create(responseBody);
                 }

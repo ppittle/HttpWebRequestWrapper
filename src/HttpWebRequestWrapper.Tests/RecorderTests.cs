@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -216,7 +218,7 @@ namespace HttpWebRequestWrapper.Tests
             _data.RecorderResponseBody.ShouldNotBeNull();
             _data.RecorderResponseBody.ShouldContain("html");
 
-            _data.RecorderRecording.ResponseBody.ShouldEqual(_data.RecorderResponseBody);
+            _data.RecorderRecording.ResponseBody.SerializedStream.ShouldEqual(_data.RecorderResponseBody);
         }
 
         [Fact]
@@ -252,7 +254,7 @@ namespace HttpWebRequestWrapper.Tests
         /// Make sure this exception gets recorded.
         /// </summary>
         // WARNING!! Makes live request
-        [Fact]
+        [Fact(Timeout = 10000)]
         public void CanRecordRequestThatThrowsExceptionOnGetResponse()
         {
             // ARRANGE
@@ -277,13 +279,13 @@ namespace HttpWebRequestWrapper.Tests
             request.RecordedRequests[0].ResponseException.WebExceptionStatus.ShouldEqual(WebExceptionStatus.ProtocolError);
 
             // make sure we recorded the response as well
-            request.RecordedRequests[0].ResponseBody.ShouldContain("<html");
+            request.RecordedRequests[0].ResponseBody.SerializedStream.ShouldContain("<html");
             request.RecordedRequests[0].ResponseStatusCode.ShouldEqual(HttpStatusCode.BadRequest);
             request.RecordedRequests[0].ResponseHeaders.Count.ShouldBeGreaterThan(0);
         }
 
         // WARNING!! Makes live request
-        [Fact]
+        [Fact(Timeout = 10000)]
         public void CanRecordAsyncRequest()
         {
             // ARRANGE
@@ -320,11 +322,11 @@ namespace HttpWebRequestWrapper.Tests
                 sr.ReadToEnd().ShouldContain("<html");
 
             request.RecordedRequests.First().RequestPayload.ShouldEqual(requestPayload);
-            request.RecordedRequests.First().ResponseBody.ShouldContain("<html");
+            request.RecordedRequests.First().ResponseBody.SerializedStream.ShouldContain("<html");
         }
 
         // WARNING!! Makes live request
-        [Fact]
+        [Fact(Timeout = 10000)]
         public void CanRecordHttpsRequest()
         {
             // ARRANGE
@@ -342,11 +344,11 @@ namespace HttpWebRequestWrapper.Tests
                 sr.ReadToEnd().ShouldContain("<html");
 
             request.RecordedRequests.First().Url.ShouldEqual(secureUri.ToString());
-            request.RecordedRequests.First().ResponseBody.ShouldContain("<html");
+            request.RecordedRequests.First().ResponseBody.SerializedStream.ShouldContain("<html");
         }
 
         // WARNING!! Makes live request
-        [Fact]
+        [Fact(Timeout = 10000)]
         public async Task CanRecordAsyncResponse()
         {
             // ARRANGE
@@ -361,11 +363,11 @@ namespace HttpWebRequestWrapper.Tests
             using (var sr = new StreamReader(response.GetResponseStream()))
                 sr.ReadToEnd().ShouldContain("<html");
 
-            request.RecordedRequests.First().ResponseBody.ShouldContain("<html");
+            request.RecordedRequests.First().ResponseBody.SerializedStream.ShouldContain("<html");
         }
 
         // WARNING!! Makes live requests
-        [Fact]
+        [Fact(Timeout = 10000)]
         public async Task CanRecordMultipleRequests()
         {
             // ARRANGE
@@ -384,16 +386,80 @@ namespace HttpWebRequestWrapper.Tests
             creator1.RecordingSession.RecordedRequests.Count.ShouldEqual(2);
 
             creator1.RecordingSession.RecordedRequests[0].Url.ShouldContain("github");
-            creator1.RecordingSession.RecordedRequests[0].ResponseBody.ShouldContain("<html");
+            creator1.RecordingSession.RecordedRequests[0].ResponseBody.SerializedStream.ShouldContain("<html");
 
             creator1.RecordingSession.RecordedRequests[1].Url.ShouldContain("appveyor");
-            creator1.RecordingSession.RecordedRequests[1].ResponseBody.ShouldContain("<html");
+            creator1.RecordingSession.RecordedRequests[1].ResponseBody.SerializedStream.ShouldContain("<html");
 
             creator2.RecordingSession.RecordedRequests.Count.ShouldEqual(1);
             creator2.RecordingSession.RecordedRequests[0].Url.ShouldContain("stackoverflow");
-            creator2.RecordingSession.RecordedRequests[0].ResponseBody.ShouldContain("<html");
+            creator2.RecordingSession.RecordedRequests[0].ResponseBody.SerializedStream.ShouldContain("<html");
         }
-        
+
+        /// <summary>
+        /// Record downloading an image file.
+        /// </summary>
+        // WARNING!! Makes live requests
+        [Fact]
+        public void CanRecordImageFileInResponse()
+        {
+            // ARRANGE
+            var uriToBinaryFile = 
+                new Uri("https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Tacos_de_Pescado.jpg/320px-Tacos_de_Pescado.jpg");
+
+            var request = new HttpWebRequestWrapperRecorder(uriToBinaryFile);
+
+            // ACT
+            var response = request.GetResponse();
+
+            // ASSERT
+            response.ShouldNotBeNull();
+
+            request.RecordedRequests[0].ResponseBody.ShouldNotBeNull();
+            request.RecordedRequests[0].ResponseBody.SerializedStream.ShouldNotBeNull();
+            request.RecordedRequests[0].ResponseBody.IsEncoded.ShouldBeTrue();
+        }
+
+        /// <summary>
+        /// Record uploading an image file.
+        /// </summary>
+        // WARNING!! Makes live requests
+        [Fact]
+        public void CanRecordImageFileInRequest()
+        {
+            var requestUrl = new Uri("http://www.github.com");
+
+            var request = new HttpWebRequestWrapperRecorder(requestUrl);
+
+            var memoryStream = new MemoryStream();
+
+            var image =new Bitmap(60, 60);
+            var graphic = Graphics.FromImage(image);
+            graphic.DrawEllipse(new Pen(Color.Blue), new Rectangle(20, 20, 10, 10));
+            graphic.Save();
+            image.Save(memoryStream, ImageFormat.Bmp);
+            memoryStream.Seek(0, SeekOrigin.Begin);
+
+            // ACT
+            request.Method = "POST";
+            request.ContentType = "images/png";
+            memoryStream.CopyTo(request.GetRequestStream());
+
+            var response = request.GetResponse();
+
+            // ASSERT
+            response.ShouldNotBeNull();
+
+            request.RecordedRequests[0].RequestPayload.ShouldNotBeNull();
+            request.RecordedRequests[0].RequestPayload.IsEncoded.ShouldBeTrue();
+            request.RecordedRequests[0].RequestPayload.SerializedStream.ShouldNotBeNull();
+            request.RecordedRequests[0].RequestPayload.SerializedStream.ShouldStartWith("Qk12");
+
+            // make sure we can reload the request payload as an image
+            var requestImage = Image.FromStream(request.RecordedRequests[0].RequestPayload.ToStream());
+            requestImage.Height.ShouldEqual(image.Height);
+        }
+
         [Fact]
         public void RecordingSessionCanBeSerialized()
         {

@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net;
+using System.Text;
 using HttpWebRequestWrapper.Extensions;
+// ReSharper disable UseNameofExpression
 
 namespace HttpWebRequestWrapper
 {
@@ -49,11 +52,11 @@ namespace HttpWebRequestWrapper
         /// <summary>
         /// Recorded <see cref="HttpWebRequest.GetRequestStream()"/>
         /// </summary>
-        public string RequestPayload { get; set; }
+        public RecordedStream RequestPayload { get; set; } = new RecordedStream();
         /// <summary>
         /// Recorded <see cref="HttpWebResponse.GetResponseStream()"/>
         /// </summary>
-        public string ResponseBody { get; set; }
+        public RecordedStream ResponseBody { get; set; } = new RecordedStream();
         /// <summary>
         /// Recorded <see cref="HttpWebResponse.Headers"/>
         /// </summary>
@@ -72,6 +75,102 @@ namespace HttpWebRequestWrapper
         /// to convert this to a strongly typed exception instance.
         /// </summary>
         public RecordedResponseException ResponseException { get; set; }
+    }
+
+    /// <summary>
+    /// TODO - supports both Request/Response streams
+    /// </summary>
+    [DebuggerDisplay("{SerializedStream}")]
+    public class RecordedStream : IEquatable<RecordedStream>
+    {
+        /// <summary>
+        /// TODO - public for serialization / test verification - 
+        /// not really meant to be set directly
+        /// </summary>
+        // ReSharper disable once MemberCanBePrivate.Global
+        public string SerializedStream { get; set; }
+
+        /// <summary>
+        /// TODO
+        /// </summary>
+        public bool IsEncoded { get; set; }
+
+        /// <summary>
+        /// TODO - Serialization constructor and used to intialize <see cref="RecordedRequest.ResponseBody"/>
+        /// </summary>
+        public RecordedStream()
+        {
+            SerializedStream = string.Empty;
+        }
+
+        /// <summary>
+        /// TODO
+        /// </summary>
+        public RecordedStream(
+            byte[] streamBytes, 
+            string charset = null,
+            string contentType = null)
+        {
+            charset = charset ?? "";
+            contentType = contentType ?? "";
+
+            if (charset.ToLower() == "utf-8" ||
+                contentType.ToLower().Contains("text") ||
+                contentType.ToLower().Contains("xml") ||
+                contentType.ToLower().Contains("json") ||
+                // assume if both charset and contenttype are empty that
+                // we do **not** need to encode streamBytes
+                (string.IsNullOrEmpty(charset) && string.IsNullOrEmpty(contentType)))
+            {
+                SerializedStream = Encoding.UTF8.GetString(streamBytes);
+                IsEncoded = false;
+            }
+            else
+            {
+                SerializedStream = Convert.ToBase64String(streamBytes);
+                IsEncoded = true;
+            }
+        }
+
+        /// <summary>
+        /// TODO
+        /// </summary>
+        public Stream ToStream()
+        {
+            return new MemoryStream(
+                IsEncoded
+                ? Convert.FromBase64String(SerializedStream ?? "")
+                : Encoding.UTF8.GetBytes(SerializedStream));
+        }
+
+        /// <summary>
+        /// TODO - mostly for convience - takes a plain-text <paramref name="textResponse"/>
+        /// and converts to a <see cref="RecordedStream"/>.
+        /// <para />
+        /// Offers a very easy way to set text content directly to <see cref="RecordedRequest.ResponseBody"/> 
+        /// </summary>
+        /// <param name="textResponse"></param>
+        public static implicit operator RecordedStream(string textResponse)
+        {
+            return new RecordedStream
+            {
+                SerializedStream = textResponse,
+                IsEncoded = false
+            };
+        }
+
+        /// <summary>
+        /// TODO
+        /// </summary>
+        public bool Equals(RecordedStream other)
+        {
+            if (null == other)
+                return string.IsNullOrEmpty(SerializedStream);
+
+            return
+                IsEncoded == other.IsEncoded &&
+                SerializedStream == other.SerializedStream;
+        }
     }
 
     /// <summary>
