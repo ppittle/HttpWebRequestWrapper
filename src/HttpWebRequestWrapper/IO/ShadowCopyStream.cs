@@ -1,7 +1,5 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Net;
-using System.Text;
 
 namespace HttpWebRequestWrapper.IO
 {
@@ -71,33 +69,5 @@ namespace HttpWebRequestWrapper.IO
             get => _primaryStream.Position;
             set => _primaryStream.Position = value;
         } 
-    }
-
-    /// <summary>
-    /// Add-ons for <see cref="ShadowCopyStream"/>
-    /// </summary>
-    internal static class ShadowCopySteamExtensions
-    {
-        internal static string ReadToEnd(this ShadowCopyStream shadowCopyStream)
-        {
-            if (null == shadowCopyStream)
-                return string.Empty;
-
-            if (shadowCopyStream.ShadowCopy.Length == 0)
-                return string.Empty;
-
-            try
-            {
-                shadowCopyStream.ShadowCopy.Seek(0, SeekOrigin.Begin);
-
-                using (var sr = new StreamReader(shadowCopyStream.ShadowCopy, Encoding.UTF8))
-                   return sr.ReadToEnd();
-            }
-            catch (Exception e)
-            {
-                // suppress exception, but update history
-                return $"ERROR: {e.Message}\r\n{e.StackTrace}";
-            }
-        }
     }
 }

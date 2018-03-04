@@ -60,7 +60,6 @@
     <Compile Include="HttpWebResponseCreator.cs" />
     <Compile Include="IInterceptorRequestBuilder.cs" />
     <Compile Include="InterceptedRequest.cs" />
-    <Compile Include="IO\MemoryStreamExtensions.cs" />
     <Compile Include="Recording\RecordedHeaders.cs" />
     <Compile Include="Recording\RecordedRequest.cs" />
     <Compile Include="Recording\RecordedResponseException.cs" />
