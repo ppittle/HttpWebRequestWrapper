@@ -12,9 +12,9 @@ namespace HttpWebRequestWrapper.HttpClient.Extensions
 
         public static void SetReturnResponseOnFailureStatusCode(
             this HttpWebRequest webRequest, 
-            bool @value)
+            bool value)
         {
-            _returnResponseOnFailureStatusCodeField.SetValue(webRequest, @value);
+            _returnResponseOnFailureStatusCodeField.SetValue(webRequest, value);
         }
     }
 }

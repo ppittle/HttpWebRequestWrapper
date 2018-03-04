@@ -65,7 +65,7 @@ namespace HttpWebRequestWrapper
 
         #region WebRequest Prefix helpers
 
-        private static PropertyInfo WebRequestPrefixListProperty =
+        private static readonly PropertyInfo _webRequestPrefixListProperty =
             typeof(WebRequest)
                 .GetProperty(
                     "PrefixList",
@@ -73,13 +73,13 @@ namespace HttpWebRequestWrapper
 
         private static ArrayList GetWebRequestPrefixList()
         {
-            var prefixList = (ArrayList)WebRequestPrefixListProperty.GetValue(null, new object[0]);
+            var prefixList = (ArrayList)_webRequestPrefixListProperty.GetValue(null, new object[0]);
             return (ArrayList) prefixList.Clone();
         }
 
         private static void SetWebRequestPrefixList(ArrayList prefixList)
         {
-            WebRequestPrefixListProperty.SetValue(null, prefixList, new object[0]);
+            _webRequestPrefixListProperty.SetValue(null, prefixList, new object[0]);
         }
 
         #endregion
