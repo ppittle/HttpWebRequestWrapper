@@ -5,6 +5,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Text;
+using HttpWebRequestWrapper.Recording;
 using HttpWebRequestWrapper.Tests.Properties;
 using Newtonsoft.Json;
 using Should;

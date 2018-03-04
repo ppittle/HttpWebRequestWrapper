@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using HttpWebRequestWrapper.IO;
+using HttpWebRequestWrapper.Recording;
 
 // Justification: Improves readability
 // ReSharper disable ConvertIfStatementToNullCoalescingExpression

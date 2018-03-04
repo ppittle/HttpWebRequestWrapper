@@ -7,6 +7,7 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using HttpWebRequestWrapper.Recording;
 using Newtonsoft.Json;
 using Should;
 using Xunit;

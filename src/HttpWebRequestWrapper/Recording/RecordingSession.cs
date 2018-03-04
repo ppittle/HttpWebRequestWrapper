@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace HttpWebRequestWrapper
+namespace HttpWebRequestWrapper.Recording
 {
     /// <summary>
     /// Collection of <see cref="RecordedRequest"/>s.  

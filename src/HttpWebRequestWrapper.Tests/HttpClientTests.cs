@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using HttpWebRequestWrapper.HttpClient;
+using HttpWebRequestWrapper.Recording;
 using Should;
 using Xunit;
 

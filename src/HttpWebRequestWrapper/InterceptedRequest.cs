@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Net;
+using HttpWebRequestWrapper.Recording;
 
 namespace HttpWebRequestWrapper
 {
