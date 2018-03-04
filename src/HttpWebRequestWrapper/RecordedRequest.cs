@@ -6,7 +6,12 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using HttpWebRequestWrapper.Extensions;
+
+// Justification: Can't use nameof in attriutes (ie DebuggerDisplay)
 // ReSharper disable UseNameofExpression
+
+// Justificaton: Public Api
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace HttpWebRequestWrapper
 {
@@ -78,33 +83,49 @@ namespace HttpWebRequestWrapper
     }
 
     /// <summary>
-    /// TODO - supports both Request/Response streams
+    /// Specialized container for recording <see cref="HttpWebRequest.GetRequestStream()"/>
+    /// and <see cref="HttpWebResponse.GetResponseStream"/>.  Examines content type/encoding
+    /// and if content reports to be text, stream is stored plain-text, otherwise, content
+    /// is stored base64.  This way binary request/responses can be recorded and serialized.
+    /// <para />
+    /// The effort is made to store plain text content as plain-text, as opposed to 
+    /// storing everything base64, so that when this class is serialized, it's easier
+    /// to read / modify recorded content.
     /// </summary>
     [DebuggerDisplay("{SerializedStream}")]
     public class RecordedStream : IEquatable<RecordedStream>
     {
         /// <summary>
-        /// TODO - public for serialization / test verification - 
-        /// not really meant to be set directly
+        /// Serialized stream.  If <see cref="IsEncoded"/> is true,
+        /// this is stored as a Base64 string, otherwise
+        /// stored plain text.
         /// </summary>
-        // ReSharper disable once MemberCanBePrivate.Global
         public string SerializedStream { get; set; }
 
         /// <summary>
-        /// TODO
+        /// Indicates if <see cref="SerializedStream"/> is encoded.
         /// </summary>
         public bool IsEncoded { get; set; }
 
         /// <summary>
-        /// TODO - Serialization constructor and used to intialize <see cref="RecordedRequest.ResponseBody"/>
+        /// Creates an empty <see cref="RecordedStream"/>.  
+        /// <see cref="SerializedStream"/> is intiailized to <see cref="string.Empty"/>
         /// </summary>
         public RecordedStream()
         {
             SerializedStream = string.Empty;
+            IsEncoded = false;
         }
 
         /// <summary>
-        /// TODO
+        /// Creates a new <see cref="RecordedStream"/> around
+        /// <paramref name="streamBytes"/>.
+        /// <para />
+        /// If <paramref name="charset"/> is "utf-8" or 
+        /// <paramref name="contentType"/> continas "text", "xml", or "json"
+        /// <paramref name="streamBytes"/> is inferred to be plain text and is
+        /// converted to a string using <see cref="UTF8Encoding.GetString(byte[],int,int)"/>.
+        /// Otherwise, <paramref name="streamBytes"/> is stored as base64 string.
         /// </summary>
         public RecordedStream(
             byte[] streamBytes, 
@@ -133,7 +154,8 @@ namespace HttpWebRequestWrapper
         }
 
         /// <summary>
-        /// TODO
+        /// Builds a new <see cref="MemoryStream"/> correclty
+        /// populated with the content of <see cref="SerializedStream"/>
         /// </summary>
         public Stream ToStream()
         {
@@ -143,13 +165,13 @@ namespace HttpWebRequestWrapper
                 : Encoding.UTF8.GetBytes(SerializedStream));
         }
 
+        
         /// <summary>
-        /// TODO - mostly for convience - takes a plain-text <paramref name="textResponse"/>
-        /// and converts to a <see cref="RecordedStream"/>.
+        /// Builds a new <see cref="RecordedStream"/> from <paramref name="textResponse"/>,
+        /// storing <paramref name="textResponse"/> as plain text in <see cref="SerializedStream"/>.
         /// <para />
-        /// Offers a very easy way to set text content directly to <see cref="RecordedRequest.ResponseBody"/> 
+        /// This makes it very easy to assign string text directly to <see cref="RecordedRequest.ResponseBody"/>.
         /// </summary>
-        /// <param name="textResponse"></param>
         public static implicit operator RecordedStream(string textResponse)
         {
             return new RecordedStream
@@ -160,7 +182,10 @@ namespace HttpWebRequestWrapper
         }
 
         /// <summary>
-        /// TODO
+        /// Determines equality betweeen <paramref name="other"/> and this
+        /// <see cref="RecordedStream"/>.  This allows comparing <see cref="RecordedStream"/>s
+        /// easier for things like <see cref="RecordingSessionInterceptorRequestBuilder.MatchingAlgorithm"/>
+        /// as well as tests.
         /// </summary>
         public bool Equals(RecordedStream other)
         {
