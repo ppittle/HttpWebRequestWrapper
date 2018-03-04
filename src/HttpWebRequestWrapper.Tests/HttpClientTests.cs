@@ -119,7 +119,7 @@ namespace HttpWebRequestWrapper.Tests
                     return req.HttpWebResponseCreator.Create(responseBody);
                 }
 
-                throw new Exception("Coulnd't match request");
+                throw new Exception("Couldn't match request");
             });
 
             HttpResponseMessage response;
@@ -167,7 +167,7 @@ namespace HttpWebRequestWrapper.Tests
                     return req.HttpWebResponseCreator.Create(responseBody);
                 }
 
-                throw new Exception("Coulnd't match request");
+                throw new Exception("Couldn't match request");
             });
 
             var requestMessage = new HttpRequestMessage(HttpMethod.Post, requestUrl)
