@@ -400,7 +400,7 @@ namespace HttpWebRequestWrapper.Tests
         /// Record downloading an image file.
         /// </summary>
         // WARNING!! Makes live requests
-        [Fact]
+        [Fact(Timeout = 10000)]
         public void CanRecordImageFileInResponse()
         {
             // ARRANGE
@@ -424,7 +424,7 @@ namespace HttpWebRequestWrapper.Tests
         /// Record uploading an image file.
         /// </summary>
         // WARNING!! Makes live requests
-        [Fact]
+        [Fact(Timeout = 10000)]
         public void CanRecordImageFileInRequest()
         {
             var requestUrl = new Uri("http://www.github.com");

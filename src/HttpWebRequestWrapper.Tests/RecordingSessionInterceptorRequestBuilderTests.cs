@@ -220,7 +220,7 @@ namespace HttpWebRequestWrapper.Tests
         }
 
         // WARNING!! Makes live request
-        [Fact]
+        [Fact(Timeout = 10000)]
         public void CanChangeDefaultNotFoundBehaviorToPassThrough()
         {
             // ARRANGE
