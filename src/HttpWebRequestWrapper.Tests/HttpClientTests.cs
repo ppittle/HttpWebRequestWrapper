@@ -76,6 +76,36 @@ namespace HttpWebRequestWrapper.Tests
             recordingSession.RecordedRequests[0].ResponseException.ShouldBeNull();
         }
 
+        // WARNING!! Makes live request
+        [Fact(Timeout = 10000)]
+        public async Task CanRecordPostWithRequestBody()
+        {
+            // ARRANGE
+            var url = "https://www.stackoverflow.com/";
+            var requestBody = "Test Post Body";
+
+            var recordingSession = new RecordingSession();
+            HttpResponseMessage response;
+
+            // ACT
+            using (new HttpClientAndRequestWrapperSession(new HttpWebRequestWrapperRecorderCreator(recordingSession)))
+            {
+                var httpClient = new System.Net.Http.HttpClient();
+
+                response = await httpClient.PostAsync(url, new StringContent(requestBody));
+            }
+
+            // ASSERT
+            response.ShouldNotBeNull();
+
+            recordingSession.RecordedRequests.Count.ShouldEqual(1);
+
+            recordingSession.RecordedRequests[0].Url.ShouldEqual(url);
+            recordingSession.RecordedRequests[0].Method.ShouldEqual("POST");
+            recordingSession.RecordedRequests[0].RequestPayload.ShouldEqual(requestBody);
+            recordingSession.RecordedRequests[0].ResponseBody.SerializedStream.ShouldContain("<html");
+        }
+
         [Fact]
         public async Task CanInterceptAndSpoofResponse()
         {
@@ -140,16 +170,72 @@ namespace HttpWebRequestWrapper.Tests
         }
 
         [Fact]
-        public void CanInterceptWhenHttpClientUsesWebRequestHandler()
+        public async Task CanInterceptWhenHttpClientUsesWebRequestHandler()
         {
+            // ARRANGE
+            var requestUrl = new Uri("http://fakesite.fake");
+            var responseBody = "web request testing";
 
+            var responseCreator = new Func<InterceptedRequest, HttpWebResponse>(req =>
+            {
+                if (req.HttpWebRequest.RequestUri == requestUrl)
+                {
+                    return req.HttpWebResponseCreator.Create(responseBody);
+                }
+
+                throw new Exception("Couldn't match request");
+            });
+
+            string response;
+
+            // ACT
+            using (new HttpClientAndRequestWrapperSession(new HttpWebRequestWrapperInterceptorCreator(responseCreator)))
+            {
+                var httpClient = new System.Net.Http.HttpClient(new WebRequestHandler());
+
+                response = await httpClient.GetStringAsync(requestUrl);
+            }
+
+            // ASSERT
+            response.ShouldEqual(responseBody);
         }
 
         [Fact]
-        public void CanInterceptWhenHttpClientSetsBaseAddress()
+        public async Task CanInterceptWhenHttpClientSetsBaseAddress()
         {
+            // ARRANGE
+            var requestBaseUrl = new Uri("http://fakesite.fake");
+            var requestRelativeUrl = "/2";
+            var requestFullUrl = new Uri(requestBaseUrl, requestRelativeUrl);
+            var responseBody = "web request testing";
 
+            var responseCreator = new Func<InterceptedRequest, HttpWebResponse>(req =>
+            {
+                if (req.HttpWebRequest.RequestUri == requestFullUrl)
+                {
+                    return req.HttpWebResponseCreator.Create(responseBody);
+                }
+
+                throw new Exception("Couldn't match request");
+            });
+
+            string response;
+
+            // ACT
+            using (new HttpClientAndRequestWrapperSession(new HttpWebRequestWrapperInterceptorCreator(responseCreator)))
+            {
+                var httpClient = new System.Net.Http.HttpClient()
+                {
+                    BaseAddress = requestBaseUrl
+                };
+
+                response = await httpClient.GetStringAsync(requestRelativeUrl);
+            }
+
+            // ASSERT
+            response.ShouldEqual(responseBody);
         }
+
         [Fact]
         public async Task CanInterceptCustomRequestMessage()
         {
@@ -191,17 +277,6 @@ namespace HttpWebRequestWrapper.Tests
 
             (await response.Content.ReadAsStringAsync()).ShouldEqual(responseBody);
         }
-
-
-        // TODO - can intercept WebRequestHandler (inherits from HttpClientHandler)
-        // TODO - cna intercept when HttpClient has BaseAddress set
-        // TODO - test when using custom request message
-        // TODO - test when using Send with HttpCompletionOption
-        // TODO - can record post
-        // TODO - can record binary response stream
-        // TODO - can record post request payload
-        // TODO - can record binary request payload
-        // TODO - can match on binary request payload
 
         [Fact(Timeout = 3000)]
         public async Task CanSupportMultipleConcurrentHttpClients()
