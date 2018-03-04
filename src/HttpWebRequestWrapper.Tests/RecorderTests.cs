@@ -308,7 +308,7 @@ namespace HttpWebRequestWrapper.Tests
                 request);
             
             if (!asyncResult.IsCompleted)
-                Thread.Sleep(TimeSpan.FromMilliseconds(250));
+                Thread.Sleep(TimeSpan.FromMilliseconds(750));
 
             if (!asyncResult.IsCompleted)
                 throw new Exception("Web Response didn't come back in reasonable time frame");
