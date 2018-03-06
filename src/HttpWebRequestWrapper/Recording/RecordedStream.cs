@@ -203,7 +203,8 @@ namespace HttpWebRequestWrapper.Recording
                 string.IsNullOrEmpty(contentType) ||
                 contentType.ToLower().Contains("text") ||
                 contentType.ToLower().Contains("xml") ||
-                contentType.ToLower().Contains("json");
+                contentType.ToLower().Contains("json") ||
+                contentType.ToLower().Contains("application/x-www-form-urlencoded");
         }
 
         /// <summary>

@@ -15,6 +15,7 @@ using Xunit;
 // Justification: Test class
 // ReSharper disable AssignNullToNotNullAttribute
 // ReSharper disable PossibleNullReferenceException
+// ReSharper disable ConvertToConstant.Local
 
 namespace HttpWebRequestWrapper.Tests
 {
@@ -246,6 +247,38 @@ namespace HttpWebRequestWrapper.Tests
         public void CanRecordResponseStatusCode()
         {
             _data.RecorderRecording.ResponseStatusCode.ShouldEqual(_data.RecorderResponse.StatusCode);
+        }
+
+        /// <summary>
+        /// When ContentType is application/x-www-form-urlencoded,
+        /// <see cref="RecordedStream.IsEncoded"/> should be false.
+        /// </summary>
+        // WARNING!! Makes live request
+        [Fact(Timeout = 10000)]
+        public void CanRecordPostWithFormUrlEncoding()
+        {
+            // ARRANGE
+            var url = new Uri("https://www.github.com");
+            var payload = "thing1=1&thing2=2";
+
+            var request = new HttpWebRequestWrapperRecorder(url)
+            {
+                Method = "POST",
+                ContentType = "application/x-www-form-urlencoded"
+            };
+
+            using (var sw = new StreamWriter(request.GetRequestStream()))
+                sw.Write(payload);
+
+            // ACT
+            var response = request.GetResponse();
+
+            // ASSERT
+            response.ShouldNotBeNull();
+
+            request.RecordedRequests.Count.ShouldEqual(1);
+            request.RecordedRequests[0].RequestPayload.IsEncoded.ShouldBeFalse();
+            request.RecordedRequests[0].RequestPayload.SerializedStream.ShouldEqual(payload);
         }
 
         /// <summary>
