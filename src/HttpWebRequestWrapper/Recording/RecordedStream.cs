@@ -35,18 +35,25 @@ namespace HttpWebRequestWrapper.Recording
         /// Serialized stream.  If <see cref="IsEncoded"/> is true,
         /// this is stored as a Base64 string, otherwise
         /// stored plain text.
-        /// </summary>
+        /// <para />
+        /// If you want to get the string content of this 
+        /// <see cref="RecordedStream"/> it's 
+        /// recommended to use <see cref="ToString"/> rather than
+        /// using <see cref="SerializedStream"/> directly.
+         /// </summary>
         public string SerializedStream { get; set; }
 
         /// <summary>
         /// Indicates if <see cref="SerializedStream"/> is encoded.
         /// </summary>
         public bool IsEncoded { get; set; }
+
         /// <summary>
         /// Indicates <see cref="SerializedStream"/> should be GZip
         /// compressed when <see cref="ToStream"/> is called.
         /// </summary>
         public bool IsGzippedCompressed { get; set; }
+
         /// <summary>
         /// Indicates <see cref="SerializedStream"/> should
         /// be compressed with the Deflate aglorithm when
@@ -75,7 +82,7 @@ namespace HttpWebRequestWrapper.Recording
         /// Otherwise, <paramref name="streamBytes"/> is stored as base64 string.
         /// </summary>
         public RecordedStream(
-            byte[] streamBytes, 
+            byte[] streamBytes,
             HttpWebRequest request)
         {
             if (streamBytes.Length == 0)
@@ -221,7 +228,7 @@ namespace HttpWebRequestWrapper.Recording
             if (IsGzippedCompressed)
             {
                 var compressed = new MemoryStream();
-                
+
                 using (var zip = new GZipStream(compressed, CompressionMode.Compress, leaveOpen: true))
                     baseStream.CopyTo(zip);
 
@@ -231,7 +238,7 @@ namespace HttpWebRequestWrapper.Recording
             else if (IsDefalteCompressed)
             {
                 var compressed = new MemoryStream();
-                
+
                 using (var deflate = new DeflateStream(compressed, CompressionMode.Compress, leaveOpen: true))
                     baseStream.CopyTo(deflate);
 
@@ -243,7 +250,35 @@ namespace HttpWebRequestWrapper.Recording
                 return baseStream;
             }
         }
-        
+
+        /// <summary>
+        /// Returns the Stream content as to as close as a useable
+        /// string as possible.
+        /// <para />
+        /// Returns <see cref="SerializedStream"/> un-encoded and 
+        /// un-compressed.  If <see cref="SerializedStream"/> represents
+        /// binanry conent, this will not be useful.  However, if for some
+        /// reason <see cref="SerializedStream"/> is string content but has
+        /// been marked <see cref="IsEncoded"/>, this will return a usable string. 
+        /// <para />
+        /// This is the perferred way of getting the Stream as a string.  It 
+        /// is unadvisable to inspect <see cref="SerializedStream"/> directly.
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            if (string.IsNullOrEmpty(SerializedStream))
+                return string.Empty;
+
+            var baseStream = new MemoryStream(
+                IsEncoded
+                    ? Convert.FromBase64String(SerializedStream ?? "")
+                    : Encoding.UTF8.GetBytes(SerializedStream));
+
+            using (var sr = new StreamReader(baseStream))
+                return sr.ReadToEnd();
+        }
+
         /// <summary>
         /// Builds a new <see cref="RecordedStream"/> from <paramref name="textResponse"/>,
         /// storing <paramref name="textResponse"/> as plain text in <see cref="SerializedStream"/>.

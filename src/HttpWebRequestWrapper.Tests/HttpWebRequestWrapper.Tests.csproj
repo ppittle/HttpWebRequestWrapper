@@ -95,6 +95,7 @@
     <Compile Include="Properties\Extensions.cs" />
     <Compile Include="RecorderTests.cs" />
     <Compile Include="RecordingSessionInterceptorRequestBuilderTests.cs" />
+    <Compile Include="Recording\RecordedStreamTests.cs" />
     <Compile Include="SessionTests.cs" />
     <Compile Include="WrapperTests.cs" />
   </ItemGroup>
