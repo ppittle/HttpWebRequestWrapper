@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Net;
 using HttpWebRequestWrapper.Recording;
 
@@ -57,7 +58,11 @@ namespace HttpWebRequestWrapper.Extensions
                 return true;
             }
             
-            if (string.IsNullOrEmpty(request?.ResponseBody?.SerializedStream))
+            // can we return a WebException without a Response?
+            if (string.IsNullOrEmpty(request?.ResponseBody?.SerializedStream) &&
+                // always need to return a response if WebExceptionStatus is ProtocolError
+                //https://msdn.microsoft.com/en-us/library/system.net.webexception.response(v=vs.110).aspx
+                request.ResponseException.WebExceptionStatus != WebExceptionStatus.ProtocolError)
             {
                 recordedException = new WebException(
                     request.ResponseException.Message,
@@ -77,7 +82,7 @@ namespace HttpWebRequestWrapper.Extensions
                         new Uri(request.Url),
                         request.Method,
                         request.ResponseStatusCode,
-                        request.ResponseBody.ToStream(),
+                        request.ResponseBody?.ToStream() ?? new MemoryStream(), 
                         request.ResponseHeaders));
 
             return true;

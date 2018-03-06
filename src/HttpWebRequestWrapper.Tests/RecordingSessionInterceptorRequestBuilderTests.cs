@@ -966,6 +966,59 @@ namespace HttpWebRequestWrapper.Tests
                 sr.ReadToEnd().ShouldEqual(recordedRequest.ResponseBody.SerializedStream);
         }
 
+        /// <summary>
+        /// From <see cref="WebException.Response"/> documentation
+        /// https://msdn.microsoft.com/en-us/library/system.net.webexception.response(v=vs.110).aspx
+        /// Response should always be set if <see cref="WebException.Status"/> is 
+        /// <see cref="WebExceptionStatus.ProtocolError"/>
+        /// </summary>
+        [Fact]
+        public void BuilderAlwaysSetsWebExcpetionResponseWhenStatusIsProtocolError()
+        {
+            // ARRANGE
+            var recordedRequest = new RecordedRequest
+            {
+                Url = "http://fakeSite.fake",
+                Method = "GET",
+                ResponseException = new RecordedResponseException
+                {
+                    Message = "Test Exception Message",
+                    Type = typeof(WebException),
+                    WebExceptionStatus = WebExceptionStatus.ProtocolError,
+                },
+                ResponseHeaders = new RecordedHeaders
+                {
+                    {"header1", new[] {"value1"}}
+                },
+                ResponseStatusCode = HttpStatusCode.Unauthorized
+                //intentionally leave ResponseBody null
+            };
+
+            var recordingSession = new RecordingSession { RecordedRequests = new List<RecordedRequest> { recordedRequest } };
+
+            var requestBuilder = new RecordingSessionInterceptorRequestBuilder(recordingSession);
+
+            IWebRequestCreate creator = new HttpWebRequestWrapperInterceptorCreator(requestBuilder);
+
+            var request = creator.Create(new Uri(recordedRequest.Url));
+
+            // ACT
+            var exception = Record.Exception(() => request.GetResponse());
+            var webException = exception as WebException;
+            var webExceptionResponse = webException.Response as HttpWebResponse;
+
+            // ASSERT
+            webException.ShouldNotBeNull();
+            webException.Message.ShouldEqual(recordedRequest.ResponseException.Message);
+            webException.Status.ShouldEqual(recordedRequest.ResponseException.WebExceptionStatus.Value);
+
+            webExceptionResponse.ShouldNotBeNull();
+            Assert.Equal(recordedRequest.ResponseHeaders, (RecordedHeaders)webExceptionResponse.Headers);
+            webExceptionResponse.StatusCode.ShouldEqual(recordedRequest.ResponseStatusCode);
+            // no response content in recordedResponse, so content length should be 0
+            webExceptionResponse.ContentLength.ShouldEqual(0);
+        }
+
         [Fact]
         public void BuilderSetsInvalidOperationException()
         {
