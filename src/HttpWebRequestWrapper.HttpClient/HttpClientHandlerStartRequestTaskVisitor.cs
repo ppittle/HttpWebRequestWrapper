@@ -100,7 +100,7 @@ namespace HttpWebRequestWrapper.HttpClient
             var httpWebRequest = requestStateWrapper.GetHttpWebRequest();
 
             // get a copy of the request streams
-            var requestStream = httpWebRequest.GetRequestStream();
+            var requestStream = httpWebRequest.EndGetRequestStream(ar);
 
             // copy the request message content to the request stream
             requestMessage.Content.CopyToAsync(requestStream).Wait();
