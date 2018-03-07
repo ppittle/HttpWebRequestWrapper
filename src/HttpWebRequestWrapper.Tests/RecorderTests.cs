@@ -419,10 +419,10 @@ namespace HttpWebRequestWrapper.Tests
             // ASSERT
             creator1.RecordingSession.RecordedRequests.Count.ShouldEqual(2);
 
-            creator1.RecordingSession.RecordedRequests[0].Url.ShouldContain("github");
-            creator1.RecordingSession.RecordedRequests[0].ResponseBody.SerializedStream.ShouldContain("<html");
+            creator1.RecordingSession.RecordedRequests.Any(x => x.Url.Contains("github")).ShouldBeTrue();
+            creator1.RecordingSession.RecordedRequests.Any(x => x.Url.Contains("appveyor")).ShouldBeTrue();
 
-            creator1.RecordingSession.RecordedRequests[1].Url.ShouldContain("appveyor");
+            creator1.RecordingSession.RecordedRequests[0].ResponseBody.SerializedStream.ShouldContain("<html");
             creator1.RecordingSession.RecordedRequests[1].ResponseBody.SerializedStream.ShouldContain("<html");
 
             creator2.RecordingSession.RecordedRequests.Count.ShouldEqual(1);
