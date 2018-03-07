@@ -27,6 +27,10 @@ namespace HttpWebRequestWrapper.HttpClient.Extensions
             typeof(HttpClientHandler)
                 .GetMethod("SetContentHeaders", BindingFlags.NonPublic | BindingFlags.Static);
 
+        private static readonly MethodInfo _initializeWebRequest =
+            typeof(HttpClientHandler)
+                .GetMethod("InitializeWebRequest", BindingFlags.NonPublic | BindingFlags.Instance);
+
         private static readonly FieldInfo _getRequestStreamCallback =
             typeof(HttpClientHandler)
                 .GetField("getRequestStreamCallback", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -58,6 +62,8 @@ namespace HttpWebRequestWrapper.HttpClient.Extensions
             _setRequestHeaders.Invoke(null, new object[] { webRequest, requestMessage });
             // HttpClientHandler.SetContentHeaders(HttpWebRequest webRequest, HttpRequestMessage request);
             _setContentHeaders.Invoke(null, new object[] { webRequest, requestMessage });
+            // HttpClientHandler.InitializeWebRequest(HttpRequestMessage request, HttpWebRequest webRequest);
+            _initializeWebRequest.Invoke(httpClientHandler, new object[] { requestMessage, webRequest });
         }
 
         public static void SetGetRequestStreamCallback(
