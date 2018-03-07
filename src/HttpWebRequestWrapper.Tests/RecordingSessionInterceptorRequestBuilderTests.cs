@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net;
+using System.Text;
+using HttpWebRequestWrapper.Recording;
 using HttpWebRequestWrapper.Tests.Properties;
 using Newtonsoft.Json;
 using Should;
@@ -108,10 +111,10 @@ namespace HttpWebRequestWrapper.Tests
             response2.ShouldNotBeNull();
 
             using (var sr = new StreamReader(response1.GetResponseStream()))
-                sr.ReadToEnd().ShouldEqual(recordedRequest1.ResponseBody);
+                sr.ReadToEnd().ShouldEqual(recordedRequest1.ResponseBody.SerializedStream);
 
             using (var sr = new StreamReader(response2.GetResponseStream()))
-                sr.ReadToEnd().ShouldEqual(recordedRequest2.ResponseBody);
+                sr.ReadToEnd().ShouldEqual(recordedRequest2.ResponseBody.SerializedStream);
         }
 
         [Fact]
@@ -220,7 +223,7 @@ namespace HttpWebRequestWrapper.Tests
         }
 
         // WARNING!! Makes live request
-        [Fact]
+        [Fact(Timeout = 10000)]
         public void CanChangeDefaultNotFoundBehaviorToPassThrough()
         {
             // ARRANGE
@@ -329,7 +332,7 @@ namespace HttpWebRequestWrapper.Tests
             response.ShouldNotBeNull();
 
             using (var sr = new StreamReader(response.GetResponseStream()))
-                sr.ReadToEnd().ShouldEqual(recordedRequest.ResponseBody);
+                sr.ReadToEnd().ShouldEqual(recordedRequest.ResponseBody.SerializedStream);
         }
 
         [Fact]
@@ -446,13 +449,13 @@ namespace HttpWebRequestWrapper.Tests
             response2b.ShouldNotBeNull();
 
             using (var sr = new StreamReader(response1a.GetResponseStream()))
-                sr.ReadToEnd().ShouldEqual(recordedRequest1.ResponseBody);
+                sr.ReadToEnd().ShouldEqual(recordedRequest1.ResponseBody.SerializedStream);
 
             using (var sr = new StreamReader(response1b.GetResponseStream()))
-                sr.ReadToEnd().ShouldEqual(recordedRequest1.ResponseBody);
+                sr.ReadToEnd().ShouldEqual(recordedRequest1.ResponseBody.SerializedStream);
 
             using (var sr = new StreamReader(response2a.GetResponseStream()))
-                sr.ReadToEnd().ShouldEqual(recordedRequest2.ResponseBody);
+                sr.ReadToEnd().ShouldEqual(recordedRequest2.ResponseBody.SerializedStream);
 
             response1c.StatusCode.ShouldEqual(HttpStatusCode.NotFound);
             response2b.StatusCode.ShouldEqual(HttpStatusCode.NotFound);
@@ -497,10 +500,10 @@ namespace HttpWebRequestWrapper.Tests
             response2.ShouldNotBeNull();
 
             using (var sr = new StreamReader(response1.GetResponseStream()))
-                sr.ReadToEnd().ShouldEqual(recordedRequest1.ResponseBody);
+                sr.ReadToEnd().ShouldEqual(recordedRequest1.ResponseBody.SerializedStream);
 
             using (var sr = new StreamReader(response2.GetResponseStream()))
-                sr.ReadToEnd().ShouldEqual(recordedRequest2.ResponseBody);
+                sr.ReadToEnd().ShouldEqual(recordedRequest2.ResponseBody.SerializedStream);
         }
 
         [Fact]
@@ -544,10 +547,10 @@ namespace HttpWebRequestWrapper.Tests
             response2.ShouldNotBeNull();
 
             using (var sr = new StreamReader(response1.GetResponseStream()))
-                sr.ReadToEnd().ShouldEqual(recordedRequest1.ResponseBody);
+                sr.ReadToEnd().ShouldEqual(recordedRequest1.ResponseBody.SerializedStream);
 
             using (var sr = new StreamReader(response2.GetResponseStream()))
-                sr.ReadToEnd().ShouldEqual(recordedRequest2.ResponseBody);
+                sr.ReadToEnd().ShouldEqual(recordedRequest2.ResponseBody.SerializedStream);
         }
 
         [Fact]
@@ -559,14 +562,19 @@ namespace HttpWebRequestWrapper.Tests
                 Url = "http://fakeSite.fake",
                 Method = "POST",
                 RequestPayload = "Request 1",
+                RequestHeaders = new RecordedHeaders
+                {
+                    {"Content-Type", new []{"text/plain" }}
+                },
                 ResponseBody = "Response 1"
             };
 
             var recordedRequest2 = new RecordedRequest
             {
                 Url = recordedRequest1.Url,
-                Method = "POST",
+                Method = recordedRequest1.Method,
                 RequestPayload = "Request 2",
+                RequestHeaders = recordedRequest1.RequestHeaders,
                 ResponseBody = "Response 2"
             };
             
@@ -581,13 +589,15 @@ namespace HttpWebRequestWrapper.Tests
 
             var request1 = creator.Create(new Uri(recordedRequest1.Url));
             request1.Method = "POST";
-            using (var sw = new StreamWriter(request1.GetRequestStream()))
-                sw.Write(recordedRequest1.RequestPayload);
+            request1.ContentType = "text/plain";
+
+            recordedRequest1.RequestPayload.ToStream().CopyTo(request1.GetRequestStream());
 
             var request2 = creator.Create(new Uri(recordedRequest2.Url));
             request2.Method = "POST";
-            using (var sw = new StreamWriter(request2.GetRequestStream()))
-                sw.Write(recordedRequest2.RequestPayload);
+            request2.ContentType = "text/plain";
+            
+            recordedRequest2.RequestPayload.ToStream().CopyTo(request2.GetRequestStream());
 
             // ACT
             var response1 = request1.GetResponse();
@@ -598,10 +608,10 @@ namespace HttpWebRequestWrapper.Tests
             response2.ShouldNotBeNull();
 
             using (var sr = new StreamReader(response1.GetResponseStream()))
-                sr.ReadToEnd().ShouldEqual(recordedRequest1.ResponseBody);
+                sr.ReadToEnd().ShouldEqual(recordedRequest1.ResponseBody.SerializedStream);
 
             using (var sr = new StreamReader(response2.GetResponseStream()))
-                sr.ReadToEnd().ShouldEqual(recordedRequest2.ResponseBody);
+                sr.ReadToEnd().ShouldEqual(recordedRequest2.ResponseBody.SerializedStream);
         }
 
         [Fact]
@@ -649,10 +659,145 @@ namespace HttpWebRequestWrapper.Tests
             response2.ShouldNotBeNull();
 
             using (var sr = new StreamReader(response1.GetResponseStream()))
-                sr.ReadToEnd().ShouldEqual(recordedRequest1.ResponseBody);
+                sr.ReadToEnd().ShouldEqual(recordedRequest1.ResponseBody.SerializedStream);
 
             using (var sr = new StreamReader(response2.GetResponseStream()))
-                sr.ReadToEnd().ShouldEqual(recordedRequest2.ResponseBody);
+                sr.ReadToEnd().ShouldEqual(recordedRequest2.ResponseBody.SerializedStream);
+        }
+
+        [Fact]
+        public void CanPlaybackZippedResponse()
+        {
+            // ARRANGE
+            var recordedRequest = new RecordedRequest
+            {
+                Url = "http://fakeSite.fake",
+                Method = "GET",
+                ResponseBody = new RecordedStream
+                {
+                    SerializedStream = "Response 1",
+                    IsGzippedCompressed = true
+                },
+                ResponseHeaders = new RecordedHeaders
+                {
+                    {"Content-Encoding", new []{"gzip"} }
+                }
+            };
+
+            var recordingSession = new RecordingSession
+            {
+                RecordedRequests = new List<RecordedRequest> { recordedRequest }
+            };
+
+            var requestBuilder = new RecordingSessionInterceptorRequestBuilder(recordingSession);
+
+            IWebRequestCreate creator = new HttpWebRequestWrapperInterceptorCreator(requestBuilder);
+
+            var request = (HttpWebRequest)creator.Create(new Uri(recordedRequest.Url));
+            request.AutomaticDecompression = DecompressionMethods.GZip;
+
+            // ACT
+            var response = request.GetResponse();
+
+            // ASSERT
+            response.ShouldNotBeNull();
+
+            using (var sr = new StreamReader(response.GetResponseStream()))
+                sr.ReadToEnd().ShouldEqual(recordedRequest.ResponseBody.SerializedStream);
+        }
+
+        [Fact]
+        public void CanPlaybackDeflatedResponse()
+        {
+            // ARRANGE
+            var recordedRequest = new RecordedRequest
+            {
+                Url = "http://fakeSite.fake",
+                Method = "GET",
+                ResponseBody = new RecordedStream
+                {
+                    SerializedStream = "Response 1",
+                    IsDefalteCompressed = true
+                },
+                ResponseHeaders = new RecordedHeaders
+                {
+                    {"Content-Encoding", new []{"deflate"} }
+                }
+            };
+
+            var recordingSession = new RecordingSession
+            {
+                RecordedRequests = new List<RecordedRequest> { recordedRequest }
+            };
+
+            var requestBuilder = new RecordingSessionInterceptorRequestBuilder(recordingSession);
+
+            IWebRequestCreate creator = new HttpWebRequestWrapperInterceptorCreator(requestBuilder);
+
+            var request = (HttpWebRequest)creator.Create(new Uri(recordedRequest.Url));
+            request.AutomaticDecompression = DecompressionMethods.Deflate;
+            
+            // ACT
+            var response = request.GetResponse();
+
+            // ASSERT
+            response.ShouldNotBeNull();
+
+            using (var sr = new StreamReader(response.GetResponseStream()))
+                sr.ReadToEnd().ShouldEqual(recordedRequest.ResponseBody.SerializedStream);
+        }
+
+        [Fact]
+        public void MatchesOnZippedPayload()
+        {
+            // ARRANGE
+            var recordedRequest = new RecordedRequest
+            {
+                Url = "http://fakeSite.fake",
+                Method = "POST",
+                RequestPayload = new RecordedStream
+                {
+                    SerializedStream = "Request 1",
+                    IsGzippedCompressed = true
+                },
+                RequestHeaders = new RecordedHeaders
+                {
+                    {"Content-Type", new []{"text/plain" }}
+                },
+                ResponseBody = "Response 1"
+            };
+
+            var recordingSession = new RecordingSession
+            {
+                RecordedRequests = new List<RecordedRequest> { recordedRequest }
+            };
+
+            var requestBuilder = new RecordingSessionInterceptorRequestBuilder(recordingSession);
+
+            IWebRequestCreate creator = new HttpWebRequestWrapperInterceptorCreator(requestBuilder);
+
+            var request = creator.Create(new Uri(recordedRequest.Url));
+            request.Method = "POST";
+            request.ContentType = "text/plain";
+
+            using (var input = new MemoryStream(Encoding.UTF8.GetBytes(recordedRequest.RequestPayload.SerializedStream)))
+            using (var compressed = new MemoryStream())
+            using (var zip = new GZipStream(compressed, CompressionMode.Compress, leaveOpen: true))
+            {
+                input.CopyTo(zip);
+                zip.Close();
+                compressed.Seek(0, SeekOrigin.Begin);
+                compressed.CopyTo(request.GetRequestStream());
+            }
+            
+            // ACT
+            var response = request.GetResponse();
+
+            // ASSERT
+            response.ShouldNotBeNull();
+            
+            using (var sr = new StreamReader(response.GetResponseStream()))
+                sr.ReadToEnd().ShouldEqual(recordedRequest.ResponseBody.SerializedStream);
         }
 
         [Fact]
@@ -681,7 +826,7 @@ namespace HttpWebRequestWrapper.Tests
             response.ShouldNotBeNull();
 
             using (var sr = new StreamReader(response.GetResponseStream()))
-                sr.ReadToEnd().ShouldEqual(recordedRequest.ResponseBody);
+                sr.ReadToEnd().ShouldEqual(recordedRequest.ResponseBody.SerializedStream);
         }
 
         [Fact]
@@ -818,7 +963,60 @@ namespace HttpWebRequestWrapper.Tests
             webExceptionResponse.ContentLength.ShouldBeGreaterThan(0);
 
             using (var sr = new StreamReader(webExceptionResponse.GetResponseStream()))
-                sr.ReadToEnd().ShouldEqual(recordedRequest.ResponseBody);
+                sr.ReadToEnd().ShouldEqual(recordedRequest.ResponseBody.SerializedStream);
+        }
+
+        /// <summary>
+        /// From <see cref="WebException.Response"/> documentation
+        /// https://msdn.microsoft.com/en-us/library/system.net.webexception.response(v=vs.110).aspx
+        /// Response should always be set if <see cref="WebException.Status"/> is 
+        /// <see cref="WebExceptionStatus.ProtocolError"/>
+        /// </summary>
+        [Fact]
+        public void BuilderAlwaysSetsWebExcpetionResponseWhenStatusIsProtocolError()
+        {
+            // ARRANGE
+            var recordedRequest = new RecordedRequest
+            {
+                Url = "http://fakeSite.fake",
+                Method = "GET",
+                ResponseException = new RecordedResponseException
+                {
+                    Message = "Test Exception Message",
+                    Type = typeof(WebException),
+                    WebExceptionStatus = WebExceptionStatus.ProtocolError,
+                },
+                ResponseHeaders = new RecordedHeaders
+                {
+                    {"header1", new[] {"value1"}}
+                },
+                ResponseStatusCode = HttpStatusCode.Unauthorized
+                //intentionally leave ResponseBody null
+            };
+
+            var recordingSession = new RecordingSession { RecordedRequests = new List<RecordedRequest> { recordedRequest } };
+
+            var requestBuilder = new RecordingSessionInterceptorRequestBuilder(recordingSession);
+
+            IWebRequestCreate creator = new HttpWebRequestWrapperInterceptorCreator(requestBuilder);
+
+            var request = creator.Create(new Uri(recordedRequest.Url));
+
+            // ACT
+            var exception = Record.Exception(() => request.GetResponse());
+            var webException = exception as WebException;
+            var webExceptionResponse = webException.Response as HttpWebResponse;
+
+            // ASSERT
+            webException.ShouldNotBeNull();
+            webException.Message.ShouldEqual(recordedRequest.ResponseException.Message);
+            webException.Status.ShouldEqual(recordedRequest.ResponseException.WebExceptionStatus.Value);
+
+            webExceptionResponse.ShouldNotBeNull();
+            Assert.Equal(recordedRequest.ResponseHeaders, (RecordedHeaders)webExceptionResponse.Headers);
+            webExceptionResponse.StatusCode.ShouldEqual(recordedRequest.ResponseStatusCode);
+            // no response content in recordedResponse, so content length should be 0
+            webExceptionResponse.ContentLength.ShouldEqual(0);
         }
 
         [Fact]

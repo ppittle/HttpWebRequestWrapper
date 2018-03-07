@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using HttpWebRequestWrapper.Recording;
 
 // Justification: Public Api
 // ReSharper disable MemberCanBePrivate.Global

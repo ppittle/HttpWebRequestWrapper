@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using HttpWebRequestWrapper.Recording;
 using Newtonsoft.Json;
 using Should;
 using Xunit;
@@ -12,6 +15,7 @@ using Xunit;
 // Justification: Test class
 // ReSharper disable AssignNullToNotNullAttribute
 // ReSharper disable PossibleNullReferenceException
+// ReSharper disable ConvertToConstant.Local
 
 namespace HttpWebRequestWrapper.Tests
 {
@@ -216,7 +220,7 @@ namespace HttpWebRequestWrapper.Tests
             _data.RecorderResponseBody.ShouldNotBeNull();
             _data.RecorderResponseBody.ShouldContain("html");
 
-            _data.RecorderRecording.ResponseBody.ShouldEqual(_data.RecorderResponseBody);
+            _data.RecorderRecording.ResponseBody.SerializedStream.ShouldEqual(_data.RecorderResponseBody);
         }
 
         [Fact]
@@ -246,13 +250,45 @@ namespace HttpWebRequestWrapper.Tests
         }
 
         /// <summary>
+        /// When ContentType is application/x-www-form-urlencoded,
+        /// <see cref="RecordedStream.IsEncoded"/> should be false.
+        /// </summary>
+        // WARNING!! Makes live request
+        [Fact(Timeout = 10000)]
+        public void CanRecordPostWithFormUrlEncoding()
+        {
+            // ARRANGE
+            var url = new Uri("https://www.github.com");
+            var payload = "thing1=1&thing2=2";
+
+            var request = new HttpWebRequestWrapperRecorder(url)
+            {
+                Method = "POST",
+                ContentType = "application/x-www-form-urlencoded"
+            };
+
+            using (var sw = new StreamWriter(request.GetRequestStream()))
+                sw.Write(payload);
+
+            // ACT
+            var response = request.GetResponse();
+
+            // ASSERT
+            response.ShouldNotBeNull();
+
+            request.RecordedRequests.Count.ShouldEqual(1);
+            request.RecordedRequests[0].RequestPayload.IsEncoded.ShouldBeFalse();
+            request.RecordedRequests[0].RequestPayload.SerializedStream.ShouldEqual(payload);
+        }
+
+        /// <summary>
         /// When the web server returns certain error codes (like a 403), 
         /// <see cref="HttpWebRequest.GetResponse"/> will throw a 
         /// <see cref="WebException"/>.  
         /// Make sure this exception gets recorded.
         /// </summary>
         // WARNING!! Makes live request
-        [Fact]
+        [Fact(Timeout = 10000)]
         public void CanRecordRequestThatThrowsExceptionOnGetResponse()
         {
             // ARRANGE
@@ -277,13 +313,13 @@ namespace HttpWebRequestWrapper.Tests
             request.RecordedRequests[0].ResponseException.WebExceptionStatus.ShouldEqual(WebExceptionStatus.ProtocolError);
 
             // make sure we recorded the response as well
-            request.RecordedRequests[0].ResponseBody.ShouldContain("<html");
+            request.RecordedRequests[0].ResponseBody.SerializedStream.ShouldContain("<html");
             request.RecordedRequests[0].ResponseStatusCode.ShouldEqual(HttpStatusCode.BadRequest);
             request.RecordedRequests[0].ResponseHeaders.Count.ShouldBeGreaterThan(0);
         }
 
         // WARNING!! Makes live request
-        [Fact]
+        [Fact(Timeout = 10000)]
         public void CanRecordAsyncRequest()
         {
             // ARRANGE
@@ -306,7 +342,7 @@ namespace HttpWebRequestWrapper.Tests
                 request);
             
             if (!asyncResult.IsCompleted)
-                Thread.Sleep(TimeSpan.FromMilliseconds(250));
+                Thread.Sleep(TimeSpan.FromMilliseconds(750));
 
             if (!asyncResult.IsCompleted)
                 throw new Exception("Web Response didn't come back in reasonable time frame");
@@ -320,11 +356,11 @@ namespace HttpWebRequestWrapper.Tests
                 sr.ReadToEnd().ShouldContain("<html");
 
             request.RecordedRequests.First().RequestPayload.ShouldEqual(requestPayload);
-            request.RecordedRequests.First().ResponseBody.ShouldContain("<html");
+            request.RecordedRequests.First().ResponseBody.SerializedStream.ShouldContain("<html");
         }
 
         // WARNING!! Makes live request
-        [Fact]
+        [Fact(Timeout = 10000)]
         public void CanRecordHttpsRequest()
         {
             // ARRANGE
@@ -342,11 +378,11 @@ namespace HttpWebRequestWrapper.Tests
                 sr.ReadToEnd().ShouldContain("<html");
 
             request.RecordedRequests.First().Url.ShouldEqual(secureUri.ToString());
-            request.RecordedRequests.First().ResponseBody.ShouldContain("<html");
+            request.RecordedRequests.First().ResponseBody.SerializedStream.ShouldContain("<html");
         }
 
         // WARNING!! Makes live request
-        [Fact]
+        [Fact(Timeout = 10000)]
         public async Task CanRecordAsyncResponse()
         {
             // ARRANGE
@@ -361,11 +397,11 @@ namespace HttpWebRequestWrapper.Tests
             using (var sr = new StreamReader(response.GetResponseStream()))
                 sr.ReadToEnd().ShouldContain("<html");
 
-            request.RecordedRequests.First().ResponseBody.ShouldContain("<html");
+            request.RecordedRequests.First().ResponseBody.SerializedStream.ShouldContain("<html");
         }
 
         // WARNING!! Makes live requests
-        [Fact]
+        [Fact(Timeout = 10000)]
         public async Task CanRecordMultipleRequests()
         {
             // ARRANGE
@@ -384,16 +420,80 @@ namespace HttpWebRequestWrapper.Tests
             creator1.RecordingSession.RecordedRequests.Count.ShouldEqual(2);
 
             creator1.RecordingSession.RecordedRequests[0].Url.ShouldContain("github");
-            creator1.RecordingSession.RecordedRequests[0].ResponseBody.ShouldContain("<html");
+            creator1.RecordingSession.RecordedRequests[0].ResponseBody.SerializedStream.ShouldContain("<html");
 
             creator1.RecordingSession.RecordedRequests[1].Url.ShouldContain("appveyor");
-            creator1.RecordingSession.RecordedRequests[1].ResponseBody.ShouldContain("<html");
+            creator1.RecordingSession.RecordedRequests[1].ResponseBody.SerializedStream.ShouldContain("<html");
 
             creator2.RecordingSession.RecordedRequests.Count.ShouldEqual(1);
             creator2.RecordingSession.RecordedRequests[0].Url.ShouldContain("stackoverflow");
-            creator2.RecordingSession.RecordedRequests[0].ResponseBody.ShouldContain("<html");
+            creator2.RecordingSession.RecordedRequests[0].ResponseBody.SerializedStream.ShouldContain("<html");
         }
-        
+
+        /// <summary>
+        /// Record downloading an image file.
+        /// </summary>
+        // WARNING!! Makes live requests
+        [Fact(Timeout = 10000)]
+        public void CanRecordImageFileInResponse()
+        {
+            // ARRANGE
+            var uriToBinaryFile = 
+                new Uri("https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Tacos_de_Pescado.jpg/320px-Tacos_de_Pescado.jpg");
+
+            var request = new HttpWebRequestWrapperRecorder(uriToBinaryFile);
+
+            // ACT
+            var response = request.GetResponse();
+
+            // ASSERT
+            response.ShouldNotBeNull();
+
+            request.RecordedRequests[0].ResponseBody.ShouldNotBeNull();
+            request.RecordedRequests[0].ResponseBody.SerializedStream.ShouldNotBeNull();
+            request.RecordedRequests[0].ResponseBody.IsEncoded.ShouldBeTrue();
+        }
+
+        /// <summary>
+        /// Record uploading an image file.
+        /// </summary>
+        // WARNING!! Makes live requests
+        [Fact(Timeout = 10000)]
+        public void CanRecordImageFileInRequest()
+        {
+            var requestUrl = new Uri("http://www.github.com");
+
+            var request = new HttpWebRequestWrapperRecorder(requestUrl);
+
+            var memoryStream = new MemoryStream();
+
+            var image =new Bitmap(60, 60);
+            var graphic = Graphics.FromImage(image);
+            graphic.DrawEllipse(new Pen(Color.Blue), new Rectangle(20, 20, 10, 10));
+            graphic.Save();
+            image.Save(memoryStream, ImageFormat.Bmp);
+            memoryStream.Seek(0, SeekOrigin.Begin);
+
+            // ACT
+            request.Method = "POST";
+            request.ContentType = "images/png";
+            memoryStream.CopyTo(request.GetRequestStream());
+
+            var response = request.GetResponse();
+
+            // ASSERT
+            response.ShouldNotBeNull();
+
+            request.RecordedRequests[0].RequestPayload.ShouldNotBeNull();
+            request.RecordedRequests[0].RequestPayload.IsEncoded.ShouldBeTrue();
+            request.RecordedRequests[0].RequestPayload.SerializedStream.ShouldNotBeNull();
+            request.RecordedRequests[0].RequestPayload.SerializedStream.ShouldStartWith("Qk12");
+
+            // make sure we can reload the request payload as an image
+            var requestImage = Image.FromStream(request.RecordedRequests[0].RequestPayload.ToStream());
+            requestImage.Height.ShouldEqual(image.Height);
+        }
+
         [Fact]
         public void RecordingSessionCanBeSerialized()
         {

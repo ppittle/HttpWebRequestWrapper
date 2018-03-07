@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using HttpWebRequestWrapper.IO;
+using HttpWebRequestWrapper.Recording;
 
 // Justification: Improves readability
 // ReSharper disable ConvertIfStatementToNullCoalescingExpression
@@ -96,7 +97,12 @@ namespace HttpWebRequestWrapper
                 Method = Method,
                 RequestCookieContainer = CookieContainer,
                 RequestHeaders = Headers,
-                RequestPayload = _shadowCopyRequestStream.ReadToEnd()
+                RequestPayload = 
+                    null == _shadowCopyRequestStream
+                    ? new RecordedStream() 
+                    : new RecordedStream(
+                        _shadowCopyRequestStream.ShadowCopy.ToArray(),
+                        this)
             };
             
             RecordedRequests.Add(recordedRequest);
@@ -157,11 +163,10 @@ namespace HttpWebRequestWrapper
                         // seek to beginning so we can read the memory stream
                         memoryStream.Seek(0, SeekOrigin.Begin);
 
-                        using (var sr = new StreamReader(memoryStream))
-                            recordedRequest.ResponseBody = sr.ReadToEnd();
-
-                        // reset the stream - stream reader closes the first one
-                        memoryStream = new MemoryStream(memoryStream.ToArray());
+                        recordedRequest.ResponseBody = 
+                            new RecordedStream(
+                                memoryStream.ToArray(),
+                                response);
 
                         // replace the default stream in response with the copy
                         ReflectionExtensions.SetField(response, "m_ConnectStream", memoryStream);

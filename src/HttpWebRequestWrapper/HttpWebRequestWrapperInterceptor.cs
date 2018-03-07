@@ -3,7 +3,7 @@ using System.IO;
 using System.Net;
 using System.Reflection;
 using System.Threading;
-using HttpWebRequestWrapper.IO;
+using HttpWebRequestWrapper.Recording;
 
 namespace HttpWebRequestWrapper
 {
@@ -35,7 +35,27 @@ namespace HttpWebRequestWrapper
         {
             _responseCreator = responseCreator;
         }
-        
+
+
+        /// <inheritdoc />
+        /// <remarks>
+        /// This override is very important.  It greatly 
+        /// speeds up execution during interception when an async
+        /// caller (ie HttpClient) wants to GetRequestStream.
+        /// <para />
+        /// Enabling this override was also found to be the solution for
+        /// https://github.com/ppittle/HttpWebRequestWrapper/issues/21
+        /// where the 3rd HttpClient.PostAsync call would stall here.
+        /// </remarks>
+        public override IAsyncResult BeginGetRequestStream(AsyncCallback callback, object state)
+        {
+            var asyncResult = new DummyAsyncResult(new ManualResetEvent(true), state);
+
+            callback?.Invoke(asyncResult);
+
+            return asyncResult;
+        }
+
         /// <inheritdoc />
         public override Stream GetRequestStream()
         {
@@ -54,9 +74,12 @@ namespace HttpWebRequestWrapper
             HttpWebResponse passThroughShadowCopy = null;
             var interceptedRequest = new InterceptedRequest
             {
-                RequestPayload = _requestStream.ReadToEnd(),
+                RequestPayload = 
+                    new RecordedStream(
+                        _requestStream.ToArray(),
+                        this),
                 HttpWebRequest = this,
-                HttpWebResponseCreator = new HttpWebResponseInterceptorCreator(RequestUri, Method),
+                HttpWebResponseCreator = new HttpWebResponseInterceptorCreator(RequestUri, Method, AutomaticDecompression),
                 PassThroughResponse = () =>
                 {
                     // if we are going to pass through - we need to use the base.GetRequest

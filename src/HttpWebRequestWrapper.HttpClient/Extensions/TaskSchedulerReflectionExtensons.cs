@@ -26,6 +26,12 @@ namespace HttpWebRequestWrapper.HttpClient.Extensions
                     "QueueTask",
                     BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 
+        private static readonly MethodInfo _tryDequeueMethod =
+            typeof(TaskScheduler)
+                .GetMethod(
+                    "TryDequeue",
+                    BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+
         private static readonly MethodInfo _tryExecuteTaskInlineMethod =
             typeof(TaskScheduler)
                 .GetMethod(
@@ -61,6 +67,21 @@ namespace HttpWebRequestWrapper.HttpClient.Extensions
                 {
                     task
                 });
+        }
+
+        /// <summary>
+        /// Uses reflection to execute the protected method
+        /// <see cref="TaskScheduler.TryDequeue"/>.
+        /// </summary>
+        public static bool TryDequeue(this TaskScheduler scheduler, Task task)
+        {
+            return (bool)
+                _tryDequeueMethod.Invoke(
+                    scheduler,
+                    new object[]
+                    {
+                        task
+                    });
         }
 
         /// <summary>
