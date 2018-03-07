@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -323,6 +326,91 @@ namespace HttpWebRequestWrapper.Tests
                 task3.Result.ShouldEqual(response3);
                 task1b.Result.ShouldEqual(response1);
             }
+        }
+
+        /// <summary>
+        /// https://github.com/ppittle/HttpWebRequestWrapper/issues/21
+        /// found that after 2 successful intercepted requests sent via
+        /// <see cref="HttpClient.SendAsync(System.Net.Http.HttpRequestMessage)"/>,
+        /// a 3rd call would never return. 
+        /// <para />
+        /// This test is *not* able to completly reproduce the bad behavior.
+        /// However, the solution was to add 
+        /// an override for 
+        /// <see cref="HttpWebRequestWrapperInterceptor.BeginGetRequestStream"/>.
+        /// Adding the override causes a 10x performance increase in this test, so it's good
+        /// to have, but it means this test is a bit flimsy - it relies on a Timeout to 
+        /// determine failure, so it can get a false positive/negative based on the 
+        /// execution environment.  But not sure how to make it better at this time.
+        /// </summary>
+        /// <returns></returns>
+        [Fact(Timeout = 2000)]
+        public async Task CanInterceptMultipleSequentialPosts()
+        {
+            // ARRANGE
+            var numberOfSequentialRequests = 20;
+
+            var recordedRequest = new RecordedRequest
+            {
+                Method = "POST",
+                Url = "http://fakeSite.fake/",
+                RequestPayload = new RecordedStream
+                {
+                    SerializedStream = "Test Request"
+                },
+                ResponseStatusCode = HttpStatusCode.OK,
+                ResponseBody = new RecordedStream
+                {
+                    SerializedStream = "Test Response",
+                    // improtant - force gzip so a compression stream gets plumbed
+                    // through the http client as that changes behavior
+                    IsGzippedCompressed = true
+                }
+            };
+
+            var requestBuilder = new RecordingSessionInterceptorRequestBuilder(
+                new RecordingSession
+                {
+                    RecordedRequests = new List<RecordedRequest> {recordedRequest}
+                })
+            {
+                MatchingAlgorithm = (intercpeted, recorded) =>
+                    string.Equals(
+                        intercpeted.HttpWebRequest.RequestUri.ToString(),
+                        recorded.Url,
+                        StringComparison.OrdinalIgnoreCase)
+            };
+
+            // ACT
+            using (new HttpClientAndRequestWrapperSession(new HttpWebRequestWrapperInterceptorCreator(requestBuilder)))
+            {
+
+                for (var i = 0; i < numberOfSequentialRequests; i++)
+                {
+                    var httpClient = new System.Net.Http.HttpClient(new WebRequestHandler());
+                    
+                    var message = new HttpRequestMessage(HttpMethod.Post, recordedRequest.Url)
+                    {
+                        Content = new StringContent(recordedRequest.RequestPayload.ToString())
+                    };
+
+                    var response = await httpClient.SendAsync(message);
+
+                    // decompress stream
+                    var responseStream = await response.Content.ReadAsStreamAsync();
+
+                    using (var zip = new GZipStream(responseStream, CompressionMode.Decompress, leaveOpen: true))
+                    using (var sr = new StreamReader(zip))
+                    //using (var sr = new StreamReader(responseStream))
+                        sr.ReadToEnd().ShouldEqual(recordedRequest.ResponseBody.ToString());
+
+                    Console.WriteLine("Completed " + i);
+                }
+            }
+
+            // ASSERT
+
+            // if we didn't timeout, then we're good
         }
 
         [Fact]
