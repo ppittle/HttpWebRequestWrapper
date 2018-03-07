@@ -36,6 +36,11 @@ namespace HttpWebRequestWrapper.HttpClient.Threading.Tasks
             _inner.QueueTask(task);
         }
 
+        protected override bool TryDequeue(Task task)
+        {
+            return _inner.TryDequeue(task);
+        }
+
         protected override bool TryExecuteTaskInline(Task task, bool taskWasPreviouslyQueued)
         {
             return _inner.TryExecuteTaskInline(task, taskWasPreviouslyQueued);
