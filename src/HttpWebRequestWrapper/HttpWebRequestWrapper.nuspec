@@ -11,7 +11,8 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Test/mock (3rd party) code reliant on HttpClient, WebClient, HttpWebRequest and WebRequest.Create() </description>
     <summary>Test/mock (3rd party) code reliant on HttpClient, WebClient, HttpWebRequest and WebRequest.Create()</summary>
-    <releaseNotes>Test/mock (3rd party) code reliant on HttpWebRequest and WebRequest.Create()! 
+    <releaseNotes>
+      Test/mock (3rd party) code reliant on HttpClient, HttpWebRequest, WebClient and WebRequest.Create()! 
       
       Includes mockable MockHttpWebRequest, HttpWebRequestWrapperSession, HttpWebRequestWrapperRecorder, HttpWebRequestWrapperInterceptor and Playback controls
       
