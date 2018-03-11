@@ -6,9 +6,9 @@
 
 # HttpWebRequestWrapper
 
-**HttpWebRequestWrapper** is a testing layer for Microsoft's `HttpWebRequest` and `WebClient` classes. It overcomes restrictions that would normally prevent mocking a `HttpWebRequest` and allows testing your application with faked HTTP requests in Unit and BDD tests.
+**HttpWebRequestWrapper** is a testing layer for Microsoft's `HttpClient`, `HttpWebRequest` and `WebClient` classes. It overcomes restrictions that would normally prevent mocking a `HttpWebRequest` and allows testing your application with faked HTTP requests in Unit and BDD tests.
 
-Ideal for testing application code that relies on http api calls either directly or through 3rd party libraries!
+`HttpWebRequestWrapper` is built with some serious secret sauce allowing you to intercept nearlly all http traffic, including calls made in 3rd party code and code that doesn't support dependency injection!  It's the ideal testing tool for testing application code that relies on http api calls either directly or through 3rd party libraries!
 
 ## NuGet
 
@@ -18,6 +18,29 @@ HttpWebRequestWrapper has no 3rd Party dependencies!
 
 ## Usage
 
+```csharp
+// Asserts we can use a HttpWebRequestWrapperSession to 
+// intercept and replace the Response to 
+// new HttpClient().GetStringAsync("https://www.github.com")
+[Test]
+public async Task InterceptAndReplaceTrafficToGitHub()
+{
+    var fakeResponse = "Testing";
+
+    var interceptor = 
+        new HttpWebRequestWrapperInterceptorCreator(x => 
+            x.HttpWebResponseCreator.Create(fakeResponse));
+
+    using (new HttpWebRequestWrapperSession(interceptor))
+    {
+        var responseBody = await new HttpClient().GetStringAsync("https://www.github.com");
+
+        Assert.Equal(fakeResponse, responseBody);
+    }
+}
+```
+
+### Testing Application Code
 Let's say you have some simple but very hard to test code that uses `WebRequest.Create` to make a live http call:
 
 ```csharp
@@ -37,15 +60,16 @@ public static class Example
 }
 ```
   
-
-Easily unit test your code with the **HttpWebRequestWrapper** Library:
+It would be ideal if this code used seperation of concerns and dependency injection to be more testable.  But perhaps it's in a 3rd party library, or it'll be too expensive to refacotr.
+Fortunatly, it can b easily unit tested with the **HttpWebRequestWrapper** Library!  The test below intercepts the http call made by `Example.CountCharactersOnAWebPage` and returns a fake html response:
 
 ```csharp
 // ARRANGE
 var fakeResponseBody = "<html>Test</html>";
 
 using (new HttpWebRequestWrapperSession(
-    new HttpWebRequestWrapperInterceptorCreator(req => req.HttpWebResponseCreator.Create(fakeResponseBody))))
+    new HttpWebRequestWrapperInterceptorCreator(req => 
+        req.HttpWebResponseCreator.Create(fakeResponseBody))))
 {
     // ACT 
     var charactersOnGitHub = Example.CountCharactersOnAWebPage("http://www.github.com");
@@ -55,46 +79,9 @@ using (new HttpWebRequestWrapperSession(
 }
 ```
 
-### Full Mocking
+### HttpClient, WebClient, and WebRequest.Create() Support
 
-Go crazy with full mocking support!  The ` HttpWebRequestWrapperInterceptor` provides very powerful faking, but you can easily build your own mock `HttpWebRequestWrapper` to provide custom behavior or expectations.
-
-```csharp
-// ARRANGE
-var fakeResponseBody = "Fake Response";
-var mockWebRequest = new Mock<HttpWebRequestWrapper>(new Uri("http://www.github.com"));
-mockWebRequest
-    .Setup(x => x.GetResponse())
-    .Returns(HttpWebResponseCreator.Create(
-        new Uri("http://www.github.com"), 
-        "GET",
-         HttpStatusCode.OK, 
-         "Fake Response"));
-
-var mockCreator = new Mock<IWebRequestCreate>();
-mockCreator
-    .Setup(x => x.Create(It.IsAny<Uri>()))
-    .Returns(mockWebRequest.Object);
-
-// ACT
-string responseBody;
-using (new HttpWebRequestWrapperSession(mockCreator.Object))
-{    
-    request = (HttpWebRequest)WebRequest.Create("http://www.github.com");
-
-    using (var sr = new StreamReader(request.GetResponse().GetResponseStream()))
-        responseBody = sr.ReadToEnd();
-}
-
-// ASSERT
-Assert.Equal(fakeResponseBody, responseBody);
-mockWebRequest.Verify(x => x.GetResponse());
-
-```
-
-### WebClient Support
-
- **HttpWebRequestWrapper** also fully supports the .net `WebClient` class:
+ **HttpWebRequestWrapper** fully supports the .net `HttpClient` and `WebClient` classes as well as the static `WebRequest.Create()` method:
 
 ```csharp
 var fakeResponse = "Testing";
@@ -103,9 +90,16 @@ using (new HttpWebRequestWrapperSession(
     new HttpWebRequestWrapperInterceptorCreator(
         x => x.HttpWebResponseCreator.Create(fakeResponse))))
 {
-    var responseBody = new WebClient().DownloadString("https://www.github.com");
+    var responseBody1 = await new HttpClient().GetStringAsync("https://www.github.com");
+    var responseBody2 = new WebClient().DownloadString("https://www.github.com");
 
-    Assert.Equal(fakeResponse, responseBody);
+    var response = WebRequest.Create("https://www.github.com").GetResponse();
+
+    Assert.Equal(fakeResponse, responseBody1);
+    Assert.Equal(fakeResponse, responseBody2);
+    
+    using (var sr = new StreamReader(response.GetResponseStream())
+        Assert.Equal(fakeResponse, sr.ReadToEnd());
 }
 ```
 
@@ -270,6 +264,43 @@ using (new HttpWebRequestWrapperSession(new HttpWebRequestWrapperDelegateCreator
 }
 ```
 
+### Full Mocking
+
+Go crazy with full mocking support!  The ` HttpWebRequestWrapperInterceptor` provides very powerful faking, but you can easily build your own mock `HttpWebRequestWrapper` to provide custom behavior or expectations.
+
+```csharp
+// ARRANGE
+var fakeResponseBody = "Fake Response";
+var mockWebRequest = new Mock<HttpWebRequestWrapper>(new Uri("http://www.github.com"));
+mockWebRequest
+    .Setup(x => x.GetResponse())
+    .Returns(HttpWebResponseCreator.Create(
+        new Uri("http://www.github.com"), 
+        "GET",
+         HttpStatusCode.OK, 
+         "Fake Response"));
+
+var mockCreator = new Mock<IWebRequestCreate>();
+mockCreator
+    .Setup(x => x.Create(It.IsAny<Uri>()))
+    .Returns(mockWebRequest.Object);
+
+// ACT
+string responseBody;
+using (new HttpWebRequestWrapperSession(mockCreator.Object))
+{    
+    request = (HttpWebRequest)WebRequest.Create("http://www.github.com");
+
+    using (var sr = new StreamReader(request.GetResponse().GetResponseStream()))
+        responseBody = sr.ReadToEnd();
+}
+
+// ASSERT
+Assert.Equal(fakeResponseBody, responseBody);
+mockWebRequest.Verify(x => x.GetResponse());
+
+```
+
 ## Secret Sauce
 
 **HttpWebRequestWrapper** works by inheriting from `HttpWebRequest`.  This doesn't seem revolutionary, except these are the `HttpWebRequest` constructors:
@@ -296,21 +327,24 @@ The second piece of magic is hooking into `WebRequest.PrefixList`.  `WebRequest`
 
 Disposing of the Session restores the original `Prefix` list.
 
+### HttpClient
+
+`HttpClient` uses an internal `HttpWebRequest` constructor to directly create requests and by-passes `WebRequest.PrefixList`.  So instead,
+**HttpWebRequestWrapper** uses a custom `TaskScheduler` to hook into `HttpClientHandler` and hijack the `HttpClientHandler.StartRequeset` method to  replace the underlying `HttpWebRequest` it will use with one created via `WebRequest.Create`.  
+
 ### Limitations
 
 **HttpWebRequestWrapper** can *not* support concurrent test execution.  Becuase `HttpWebRequestWrapperSession` works by setting a global static variable it's not possible to have two Sessions in use at one time.  Code inside the Session's using block is free to execute concurrently, you just can't try and use two or more Sessions at once.
 
-### HttpClient
-
-`HttpClient` is not supported by **HttpWebRequestWrapper** because while it does use `HttpWebRequest` under the hood, it does not honor the `WebRequest.PrefixList` for determining which `IWebRequestCreate` to use to create the `HttpWebRequest` it uses.  So `HttpWebRequestWrapperSession` can't hook into it.
-
-If you're looking for testing tools specifically for `HttpClient`, try [MockHttp](https://github.com/richardszalay/mockhttp).
+`HttpClient` performs IO via the abstract `HttpMessageHandler`.  By default, this is a `HttpClinetHandler`.  **HttpWebRequestWrapper** fully supports `HttpClientHandler` and any handler that inherits from `HttpClientHandler`.  Custom handlers that instead inheirt directly from `HttpMessageHandler` are not supported and will not be intercepted.
 
 ## Platform Support
 
 The actual wrapper `HttpWebRequestWrapper` is compiled for .NET Framework 2.0 and supports up to versions 4.7 of the .NET Framework (newest version tested at the time).
 
 The remainder of **HttpWebRequestWrapper** requires .NET Framework 3.5+
+
+Support for `HttpClient` requires .NET Framework 4.5+
 
 ## Build
 
