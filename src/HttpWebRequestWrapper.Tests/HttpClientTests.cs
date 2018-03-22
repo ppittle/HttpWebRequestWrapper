@@ -13,6 +13,7 @@ using Xunit;
 
 // Justification: Test class
 // ReSharper disable InconsistentNaming
+// ReSharper disable ConvertToConstant.Local
 
 namespace HttpWebRequestWrapper.Tests
 {
@@ -334,7 +335,7 @@ namespace HttpWebRequestWrapper.Tests
         /// <see cref="HttpClient.SendAsync(System.Net.Http.HttpRequestMessage)"/>,
         /// a 3rd call would never return. 
         /// <para />
-        /// This test is *not* able to completly reproduce the bad behavior.
+        /// This test is *not* able to completely reproduce the bad behavior.
         /// However, the solution was to add 
         /// an override for 
         /// <see cref="HttpWebRequestWrapperInterceptor.BeginGetRequestStream"/>.
@@ -362,7 +363,7 @@ namespace HttpWebRequestWrapper.Tests
                 ResponseBody = new RecordedStream
                 {
                     SerializedStream = "Test Response",
-                    // improtant - force gzip so a compression stream gets plumbed
+                    // important - force gzip so a compression stream gets plumbed
                     // through the http client as that changes behavior
                     IsGzippedCompressed = true
                 }
@@ -374,9 +375,9 @@ namespace HttpWebRequestWrapper.Tests
                     RecordedRequests = new List<RecordedRequest> {recordedRequest}
                 })
             {
-                MatchingAlgorithm = (intercpeted, recorded) =>
+                MatchingAlgorithm = (intercepted, recorded) =>
                     string.Equals(
-                        intercpeted.HttpWebRequest.RequestUri.ToString(),
+                        intercepted.HttpWebRequest.RequestUri.ToString(),
                         recorded.Url,
                         StringComparison.OrdinalIgnoreCase)
             };
