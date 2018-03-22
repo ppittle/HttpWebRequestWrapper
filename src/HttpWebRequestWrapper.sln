@@ -15,11 +15,10 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{E8FC4CE3-1DA7-42B1-8031-EDDAC8BAAD3A}"
 	ProjectSection(SolutionItems) = preProject
 		..\appveyor.yml = ..\appveyor.yml
+		HttpWebRequestWrapper.nuspec = HttpWebRequestWrapper.nuspec
 		modifyHttpWebRequestWrapper.LowLevel.bat = modifyHttpWebRequestWrapper.LowLevel.bat
 		..\README.md = ..\README.md
 	EndProjectSection
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpWebRequestWrapper.HttpClient", "HttpWebRequestWrapper.HttpClient\HttpWebRequestWrapper.HttpClient.csproj", "{8CFDEBBF-EFF3-4AD5-95B1-6E4EF47C5420}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpWebRequestWrapper.35", "HttpWebRequestWrapper\HttpWebRequestWrapper.35.csproj", "{D0C88C5B-7E98-4F8C-9171-2247E4F7BBDF}"
 EndProject
@@ -43,10 +42,6 @@ Global
 		{F4417E60-9676-483A-90A7-712C7C0024D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F4417E60-9676-483A-90A7-712C7C0024D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F4417E60-9676-483A-90A7-712C7C0024D7}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8CFDEBBF-EFF3-4AD5-95B1-6E4EF47C5420}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8CFDEBBF-EFF3-4AD5-95B1-6E4EF47C5420}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8CFDEBBF-EFF3-4AD5-95B1-6E4EF47C5420}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8CFDEBBF-EFF3-4AD5-95B1-6E4EF47C5420}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D0C88C5B-7E98-4F8C-9171-2247E4F7BBDF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D0C88C5B-7E98-4F8C-9171-2247E4F7BBDF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D0C88C5B-7E98-4F8C-9171-2247E4F7BBDF}.Release|Any CPU.ActiveCfg = Release|Any CPU
