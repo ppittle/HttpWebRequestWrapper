@@ -25,7 +25,9 @@ build:
   verbosity: minimal
 test_script:
 - ps: >-
-    .\src\packages\OpenCover.4.6.519\tools\OpenCover.Console.exe -register:user -target:"xunit.console.clr4.exe"  "-targetargs:""src\HttpWebRequestWrapper.Tests\bin\$env:CONFIGURATION\HttpWebRequestWrapper.Tests.dll"" /noshadow /appveyor" -filter:"+[HttpWebRequestWrapper*]*" -output:opencoverCoverage.xml -returntargetcode
+    .\src\packages\OpenCover.4.6.519\tools\OpenCover.Console.exe -register:user -target:"xunit.console.clr4.exe" "-targetargs:""src\HttpWebRequestWrapper.Tests\bin\$env:CONFIGURATION\HttpWebRequestWrapper.Tests.dll"" /noshadow /appveyor" -filter:"+[HttpWebRequestWrapper*]*" -output:opencoverCoverage.xml -returntargetcode
+    
+    .\src\packages\OpenCover.4.6.519\tools\OpenCover.Console.exe -register:user -target:"xunit.console.clr4.exe" "-targetargs:""src\HttpWebRequestWrapper.Tests\bin\$env:CONFIGURATION\HttpWebRequestWrapper.Tests.35.dll"" /noshadow /appveyor" -filter:"+[HttpWebRequestWrapper*]*" -output:opencoverCoverage.xml -returntargetcode -mergeoutput
     
     if ($LastExitCode -ne 0){
        throw "xUnit failed with code $LastExitCode"

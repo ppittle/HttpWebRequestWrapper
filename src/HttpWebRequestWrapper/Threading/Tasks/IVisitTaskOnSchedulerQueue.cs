@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace HttpWebRequestWrapper.HttpClient.Threading.Tasks
+namespace HttpWebRequestWrapper.Threading.Tasks
 {
     /// <summary>
     /// Plugin for <see cref="TaskSchedulerProxy"/>.  Indicates

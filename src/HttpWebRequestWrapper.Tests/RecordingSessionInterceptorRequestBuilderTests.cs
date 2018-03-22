@@ -717,7 +717,7 @@ namespace HttpWebRequestWrapper.Tests
                 ResponseBody = new RecordedStream
                 {
                     SerializedStream = "Response 1",
-                    IsDefalteCompressed = true
+                    IsDeflateCompressed = true
                 },
                 ResponseHeaders = new RecordedHeaders
                 {
@@ -973,7 +973,7 @@ namespace HttpWebRequestWrapper.Tests
         /// <see cref="WebExceptionStatus.ProtocolError"/>
         /// </summary>
         [Fact]
-        public void BuilderAlwaysSetsWebExcpetionResponseWhenStatusIsProtocolError()
+        public void BuilderAlwaysSetsWebExceptionResponseWhenStatusIsProtocolError()
         {
             // ARRANGE
             var recordedRequest = new RecordedRequest
@@ -984,7 +984,7 @@ namespace HttpWebRequestWrapper.Tests
                 {
                     Message = "Test Exception Message",
                     Type = typeof(WebException),
-                    WebExceptionStatus = WebExceptionStatus.ProtocolError,
+                    WebExceptionStatus = WebExceptionStatus.ProtocolError
                 },
                 ResponseHeaders = new RecordedHeaders
                 {

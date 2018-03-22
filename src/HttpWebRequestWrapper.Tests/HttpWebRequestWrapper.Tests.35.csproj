@@ -5,11 +5,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{F4417E60-9676-483A-90A7-712C7C0024D7}</ProjectGuid>
+    <ProjectGuid>{26F24A49-C25D-40F8-A78B-0304891E9438}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>HttpWebRequestWrapper.Tests</RootNamespace>
-    <AssemblyName>HttpWebRequestWrapper.Tests</AssemblyName>
+    <AssemblyName>HttpWebRequestWrapper.Tests.35</AssemblyName>
     <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
@@ -21,7 +21,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;NET40</DefineConstants>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -31,7 +31,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE;NET40</DefineConstants>
+    <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -89,7 +89,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DelegateCreatorTests.cs" />
-    <Compile Include="HttpClientTests.cs" />
     <Compile Include="InterceptorTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Extensions.cs" />
@@ -100,14 +99,14 @@
     <Compile Include="WrapperTests.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\HttpWebRequestWrapper\HttpWebRequestWrapper.csproj">
-      <Project>{adf62182-ce9f-4dce-b5c7-b089a386bbd1}</Project>
-      <Name>HttpWebRequestWrapper</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="packages.config" />
     <EmbeddedResource Include="RecordingSession.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\HttpWebRequestWrapper\HttpWebRequestWrapper.35.csproj">
+      <Project>{d0c88c5b-7e98-4f8c-9171-2247e4f7bbdf}</Project>
+      <Name>HttpWebRequestWrapper.35</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

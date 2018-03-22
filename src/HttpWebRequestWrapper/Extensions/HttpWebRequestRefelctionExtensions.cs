@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using System.Reflection;
 
-namespace HttpWebRequestWrapper.HttpClient.Extensions
+namespace HttpWebRequestWrapper.Extensions
 {
     internal static class HttpWebRequestRefelctionExtensions
     {

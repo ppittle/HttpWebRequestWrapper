@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
-using HttpWebRequestWrapper.HttpClient.Threading.Tasks;
+using HttpWebRequestWrapper.Threading.Tasks;
 
-namespace HttpWebRequestWrapper.HttpClient.Extensions
+namespace HttpWebRequestWrapper.Extensions
 {
     /// <summary>
     /// Helper methods for using reflection to invoke

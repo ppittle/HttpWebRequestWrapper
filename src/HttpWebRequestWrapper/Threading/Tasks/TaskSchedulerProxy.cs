@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using HttpWebRequestWrapper.HttpClient.Extensions;
+using HttpWebRequestWrapper.Extensions;
 
-namespace HttpWebRequestWrapper.HttpClient.Threading.Tasks
+namespace HttpWebRequestWrapper.Threading.Tasks
 {
     /// <summary>
     /// Black Magic.  Intercepts the scheduling of all Tasks

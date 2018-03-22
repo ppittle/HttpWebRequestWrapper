@@ -5,16 +5,21 @@ using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Text;
+#if !NET40
 using HttpWebRequestWrapper.Extensions;
+#endif
 
-// Justification: Can't use nameof in attriutes (ie DebuggerDisplay)
+// Justification: Can't use nameof in attributes (ie DebuggerDisplay)
 // ReSharper disable UseNameofExpression
 
-// Justificaton: Public Api
+// Justification: Public Api
 // ReSharper disable MemberCanBePrivate.Global
 
 // Justification: Prefer instance methods
 // ReSharper disable MemberCanBeMadeStatic.Local
+
+// Justification: Improves readability
+// ReSharper disable ArgumentsStyleLiteral
 
 namespace HttpWebRequestWrapper.Recording
 {
@@ -59,11 +64,11 @@ namespace HttpWebRequestWrapper.Recording
         /// be compressed with the Deflate aglorithm when
         /// <see cref="ToStream"/> is called. 
         /// </summary>
-        public bool IsDefalteCompressed { get; set; }
+        public bool IsDeflateCompressed { get; set; }
 
         /// <summary>
         /// Creates an empty <see cref="RecordedStream"/>.  
-        /// <see cref="SerializedStream"/> is intiailized to <see cref="string.Empty"/>
+        /// <see cref="SerializedStream"/> is initialized to <see cref="string.Empty"/>
         /// </summary>
         public RecordedStream()
         {
@@ -182,7 +187,7 @@ namespace HttpWebRequestWrapper.Recording
             if (streamBytes.Length == 0)
                 return streamBytes;
 
-            // don't know of a way to pre-emptively guess if stream is compressed with deflate
+            // don't know of a way to preemptively guess if stream is compressed with deflate
             // have to try to deflate in a try/catch
             try
             {
@@ -192,7 +197,7 @@ namespace HttpWebRequestWrapper.Recording
                 {
                     deflateStream.CopyTo(decompressed);
 
-                    IsDefalteCompressed = true;
+                    IsDeflateCompressed = true;
                     return decompressed.ToArray();
                 }
             }
@@ -205,7 +210,7 @@ namespace HttpWebRequestWrapper.Recording
         private bool ContentTypeIsForPlainText(string contentType)
         {
             return
-                // assume if contenttype are empty that
+                // assume if contentType are empty that
                 // we do **not** need to encode streamBytes
                 string.IsNullOrEmpty(contentType) ||
                 contentType.ToLower().Contains("text") ||
@@ -215,7 +220,7 @@ namespace HttpWebRequestWrapper.Recording
         }
 
         /// <summary>
-        /// Builds a new <see cref="MemoryStream"/> correclty
+        /// Builds a new <see cref="MemoryStream"/> correctly
         /// populated with the content of <see cref="SerializedStream"/>
         /// </summary>
         public Stream ToStream()
@@ -235,7 +240,7 @@ namespace HttpWebRequestWrapper.Recording
                 compressed.Seek(0, SeekOrigin.Begin);
                 return compressed;
             }
-            else if (IsDefalteCompressed)
+            else if (IsDeflateCompressed)
             {
                 var compressed = new MemoryStream();
 
@@ -257,12 +262,12 @@ namespace HttpWebRequestWrapper.Recording
         /// <para />
         /// Returns <see cref="SerializedStream"/> un-encoded and 
         /// un-compressed.  If <see cref="SerializedStream"/> represents
-        /// binanry conent, this will not be useful.  However, if for some
+        /// binary content, this will not be useful.  However, if for some
         /// reason <see cref="SerializedStream"/> is string content but has
         /// been marked <see cref="IsEncoded"/>, this will return a usable string. 
         /// <para />
-        /// This is the perferred way of getting the Stream as a string.  It 
-        /// is unadvisable to inspect <see cref="SerializedStream"/> directly.
+        /// This is the preferred way of getting the Stream as a string.  It 
+        /// is inadvisable to inspect <see cref="SerializedStream"/> directly.
         /// </summary>
         /// <returns></returns>
         public override string ToString()
@@ -295,7 +300,7 @@ namespace HttpWebRequestWrapper.Recording
         }
 
         /// <summary>
-        /// Determines equality betweeen <paramref name="other"/> and this
+        /// Determines equality between <paramref name="other"/> and this
         /// <see cref="RecordedStream"/>.  This allows comparing <see cref="RecordedStream"/>s
         /// easier for things like <see cref="RecordingSessionInterceptorRequestBuilder.MatchingAlgorithm"/>
         /// as well as tests.

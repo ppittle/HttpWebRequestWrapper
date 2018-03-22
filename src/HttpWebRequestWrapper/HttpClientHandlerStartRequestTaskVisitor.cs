@@ -4,15 +4,15 @@ using System.Net;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
-using HttpWebRequestWrapper.HttpClient.Extensions;
-using HttpWebRequestWrapper.HttpClient.Threading.Tasks;
+using HttpWebRequestWrapper.Extensions;
+using HttpWebRequestWrapper.Threading.Tasks;
 
-namespace HttpWebRequestWrapper.HttpClient
+namespace HttpWebRequestWrapper
 {
     /// <summary>
     /// Provides the magic for supporting intercepting web traffic made by 
     /// <see cref="System.Net.Http.HttpClient"/>.  This is built
-    /// by <see cref="HttpClientAndRequestWrapperSession"/> and feed into a 
+    /// by <see cref="HttpWebRequestWrapperSession"/> and feed into a 
     /// <see cref="TaskSchedulerProxy"/>.
     /// <para />
     /// This allows <see cref="Visit"/> to intercept the task 
@@ -20,7 +20,7 @@ namespace HttpWebRequestWrapper.HttpClient
     /// <see cref="HttpWebRequest"/> that the <see cref="HttpClientHandler"/> just built
     /// with a fully built HttpWebRequest that was built via <see cref="WebRequest.Create(string)"/>.
     /// <para />
-    /// See <see cref="HttpClientAndRequestWrapperSession"/> for more information.
+    /// See <see cref="HttpWebRequestWrapperSession"/> for more information.
     /// </summary>
     internal class HttpClientHandlerStartRequestTaskVisitor : IVisitTaskOnSchedulerQueue
     {
@@ -36,11 +36,11 @@ namespace HttpWebRequestWrapper.HttpClient
         /// replaces the HttpWebRequest that HttpClientHandler just built
         /// with a fully built HttpWebRequest that was built via <see cref="WebRequest.Create(string)"/>.
         /// <para />
-        /// See <see cref="HttpClientHandlerStartRequestTaskVisitor"/> for more infomration.
+        /// See <see cref="HttpClientHandlerStartRequestTaskVisitor"/> for more information.
         /// </summary>
         public void Visit(Task task)
         {
-            // is the task's action a delgate (ie method invocation)?
+            // is the task's action a delegate (ie method invocation)?
             if (!(task.GetAction() is Delegate taskAction))
                 return;
 
@@ -63,7 +63,7 @@ namespace HttpWebRequestWrapper.HttpClient
             // throwing exceptions on non 200 results
             httpWebRequest.SetReturnResponseOnFailureStatusCode(true);
 
-            // get a reference to the HttpClientHanlder we've intercepted
+            // get a reference to the HttpClientHandler we've intercepted
             var handler = (HttpClientHandler)taskAction.Target;
 
             // copy the request message to the http web request we just built
@@ -96,7 +96,7 @@ namespace HttpWebRequestWrapper.HttpClient
             // get the HttpRequestMessage we've intercepted
             var requestMessage = requestStateWrapper.GetHttpRequestMessage();
 
-            // load the HttpWebRequest we've already intercpeted and replaced
+            // load the HttpWebRequest we've already intercepted and replaced
             var httpWebRequest = requestStateWrapper.GetHttpWebRequest();
 
             // get a copy of the request streams
@@ -105,7 +105,7 @@ namespace HttpWebRequestWrapper.HttpClient
             // copy the request message content to the request stream
             requestMessage.Content.CopyToAsync(requestStream).Wait();
 
-            // save the request stream to the requet state
+            // save the request stream to the request state
             requestStateWrapper.SetRequestStream(requestStream);
 
             // continue on with StartGettingResponse

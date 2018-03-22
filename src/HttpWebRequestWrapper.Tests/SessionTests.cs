@@ -1,13 +1,13 @@
 ﻿using System;
 using System.IO;
 using System.Net;
-using HttpWebRequestWrapper.HttpClient;
 using Moq;
 using Should;
 using Xunit;
 
 // Justification: Test Class
 // ReSharper disable AssignNullToNotNullAttribute
+// ReSharper disable ConvertToConstant.Local
 
 namespace HttpWebRequestWrapper.Tests
 {
@@ -161,12 +161,13 @@ namespace HttpWebRequestWrapper.Tests
             }
         }
 
+        #if NET40
         [Fact]
         public void SupportsHttpClient()
         {
             var fakeResponse = "Testing";
 
-            using (new HttpClientAndRequestWrapperSession(
+            using (new HttpWebRequestWrapperSession(
                 new HttpWebRequestWrapperInterceptorCreator(
                     x => x.HttpWebResponseCreator.Create(fakeResponse))))
             {
@@ -176,6 +177,7 @@ namespace HttpWebRequestWrapper.Tests
                     .ShouldEqual(fakeResponse);
             }
         }
+        #endif
 
         [Fact]
         public void CanInterceptInASession()

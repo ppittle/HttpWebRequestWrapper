@@ -6,13 +6,13 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
-using HttpWebRequestWrapper.HttpClient;
 using HttpWebRequestWrapper.Recording;
 using Should;
 using Xunit;
 
 // Justification: Test class
 // ReSharper disable InconsistentNaming
+// ReSharper disable ConvertToConstant.Local
 
 namespace HttpWebRequestWrapper.Tests
 {
@@ -36,9 +36,9 @@ namespace HttpWebRequestWrapper.Tests
             HttpResponseMessage response;
 
             // ACT
-            using (new HttpClientAndRequestWrapperSession(new HttpWebRequestWrapperRecorderCreator(recordingSession)))
+            using (new HttpWebRequestWrapperSession(new HttpWebRequestWrapperRecorderCreator(recordingSession)))
             {
-                var httpClient = new System.Net.Http.HttpClient();
+                var httpClient = new HttpClient();
 
                 response = await httpClient.GetAsync(url);
             }
@@ -62,9 +62,9 @@ namespace HttpWebRequestWrapper.Tests
             HttpResponseMessage response;
 
             // ACT
-            using (new HttpClientAndRequestWrapperSession(new HttpWebRequestWrapperRecorderCreator(recordingSession)))
+            using (new HttpWebRequestWrapperSession(new HttpWebRequestWrapperRecorderCreator(recordingSession)))
             {
-                var httpClient = new System.Net.Http.HttpClient();
+                var httpClient = new HttpClient();
 
                 response = await httpClient.GetAsync("https://accounts.google.com/o/oauth2/auth");
             }
@@ -92,9 +92,9 @@ namespace HttpWebRequestWrapper.Tests
             HttpResponseMessage response;
 
             // ACT
-            using (new HttpClientAndRequestWrapperSession(new HttpWebRequestWrapperRecorderCreator(recordingSession)))
+            using (new HttpWebRequestWrapperSession(new HttpWebRequestWrapperRecorderCreator(recordingSession)))
             {
-                var httpClient = new System.Net.Http.HttpClient();
+                var httpClient = new HttpClient();
 
                 response = await httpClient.PostAsync(url, new StringContent(requestBody));
             }
@@ -122,9 +122,9 @@ namespace HttpWebRequestWrapper.Tests
             HttpResponseMessage response;
 
             // ACT
-            using (new HttpClientAndRequestWrapperSession(new HttpWebRequestWrapperInterceptorCreator(responseCreator)))
+            using (new HttpWebRequestWrapperSession(new HttpWebRequestWrapperInterceptorCreator(responseCreator)))
             {
-                var httpClient = new System.Net.Http.HttpClient();
+                var httpClient = new HttpClient();
 
                 response = await httpClient.GetAsync(new Uri("http://fakeSite.fake"));
             }
@@ -159,10 +159,10 @@ namespace HttpWebRequestWrapper.Tests
             HttpResponseMessage response;
 
             // ACT
-            using (new HttpClientAndRequestWrapperSession(
+            using (new HttpWebRequestWrapperSession(
                     new HttpWebRequestWrapperInterceptorCreator(responseCreator)))
             {
-                var httpClient = new System.Net.Http.HttpClient();
+                var httpClient = new HttpClient();
 
                 response = await httpClient.PostAsync(requestUrl, new StringContent(requestBody));
             }
@@ -193,9 +193,9 @@ namespace HttpWebRequestWrapper.Tests
             string response;
 
             // ACT
-            using (new HttpClientAndRequestWrapperSession(new HttpWebRequestWrapperInterceptorCreator(responseCreator)))
+            using (new HttpWebRequestWrapperSession(new HttpWebRequestWrapperInterceptorCreator(responseCreator)))
             {
-                var httpClient = new System.Net.Http.HttpClient(new WebRequestHandler());
+                var httpClient = new HttpClient(new WebRequestHandler());
 
                 response = await httpClient.GetStringAsync(requestUrl);
             }
@@ -226,9 +226,9 @@ namespace HttpWebRequestWrapper.Tests
             string response;
 
             // ACT
-            using (new HttpClientAndRequestWrapperSession(new HttpWebRequestWrapperInterceptorCreator(responseCreator)))
+            using (new HttpWebRequestWrapperSession(new HttpWebRequestWrapperInterceptorCreator(responseCreator)))
             {
-                var httpClient = new System.Net.Http.HttpClient()
+                var httpClient = new HttpClient()
                 {
                     BaseAddress = requestBaseUrl
                 };
@@ -268,10 +268,10 @@ namespace HttpWebRequestWrapper.Tests
             HttpResponseMessage response;
 
             // ACT
-            using (new HttpClientAndRequestWrapperSession(
+            using (new HttpWebRequestWrapperSession(
                 new HttpWebRequestWrapperInterceptorCreator(responseCreator)))
             {
-                var httpClient = new System.Net.Http.HttpClient();
+                var httpClient = new HttpClient();
 
                 response = await httpClient.SendAsync(requestMessage);
             }
@@ -308,15 +308,15 @@ namespace HttpWebRequestWrapper.Tests
                 throw new Exception($"Couldn't match url [{req.HttpWebRequest.RequestUri}]");
             });
 
-            using (new HttpClientAndRequestWrapperSession(new HttpWebRequestWrapperInterceptorCreator(responseCreator)))
+            using (new HttpWebRequestWrapperSession(new HttpWebRequestWrapperInterceptorCreator(responseCreator)))
             {
                 // ACT
-                var sharedClient = new System.Net.Http.HttpClient();
+                var sharedClient = new HttpClient();
 
                 var task1 = sharedClient.GetStringAsync(url1);
                 var task2 = sharedClient.GetStringAsync(url2);
-                var task3 = new System.Net.Http.HttpClient().GetStringAsync(url3);
-                var task1b = new System.Net.Http.HttpClient().GetStringAsync(url1);
+                var task3 = new HttpClient().GetStringAsync(url3);
+                var task1b = new HttpClient().GetStringAsync(url1);
 
                 await Task.WhenAll(task1, task2, task3, task1b);
 
@@ -334,7 +334,7 @@ namespace HttpWebRequestWrapper.Tests
         /// <see cref="HttpClient.SendAsync(System.Net.Http.HttpRequestMessage)"/>,
         /// a 3rd call would never return. 
         /// <para />
-        /// This test is *not* able to completly reproduce the bad behavior.
+        /// This test is *not* able to completely reproduce the bad behavior.
         /// However, the solution was to add 
         /// an override for 
         /// <see cref="HttpWebRequestWrapperInterceptor.BeginGetRequestStream"/>.
@@ -362,7 +362,7 @@ namespace HttpWebRequestWrapper.Tests
                 ResponseBody = new RecordedStream
                 {
                     SerializedStream = "Test Response",
-                    // improtant - force gzip so a compression stream gets plumbed
+                    // important - force gzip so a compression stream gets plumbed
                     // through the http client as that changes behavior
                     IsGzippedCompressed = true
                 }
@@ -374,20 +374,20 @@ namespace HttpWebRequestWrapper.Tests
                     RecordedRequests = new List<RecordedRequest> {recordedRequest}
                 })
             {
-                MatchingAlgorithm = (intercpeted, recorded) =>
+                MatchingAlgorithm = (intercepted, recorded) =>
                     string.Equals(
-                        intercpeted.HttpWebRequest.RequestUri.ToString(),
+                        intercepted.HttpWebRequest.RequestUri.ToString(),
                         recorded.Url,
                         StringComparison.OrdinalIgnoreCase)
             };
 
             // ACT
-            using (new HttpClientAndRequestWrapperSession(new HttpWebRequestWrapperInterceptorCreator(requestBuilder)))
+            using (new HttpWebRequestWrapperSession(new HttpWebRequestWrapperInterceptorCreator(requestBuilder)))
             {
 
                 for (var i = 0; i < numberOfSequentialRequests; i++)
                 {
-                    var httpClient = new System.Net.Http.HttpClient(new WebRequestHandler());
+                    var httpClient = new HttpClient(new WebRequestHandler());
                     
                     var message = new HttpRequestMessage(HttpMethod.Post, recordedRequest.Url)
                     {
@@ -430,9 +430,9 @@ namespace HttpWebRequestWrapper.Tests
             HttpResponseMessage response;
 
             // ACT
-            using (new HttpClientAndRequestWrapperSession(new HttpWebRequestWrapperInterceptorCreator(responseCreator)))
+            using (new HttpWebRequestWrapperSession(new HttpWebRequestWrapperInterceptorCreator(responseCreator)))
             {
-                var httpClient = new System.Net.Http.HttpClient();
+                var httpClient = new HttpClient();
 
                 response = await httpClient.GetAsync(new Uri("http://fakeSite.fake"));
             }

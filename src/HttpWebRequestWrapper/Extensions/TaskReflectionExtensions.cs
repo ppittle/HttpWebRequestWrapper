@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 using System.Threading.Tasks;
 
-namespace HttpWebRequestWrapper.HttpClient.Extensions
+namespace HttpWebRequestWrapper.Extensions
 {
     internal static class TaskReflectionExtensions
     {

@@ -3,7 +3,7 @@ using System.Net;
 using System.Net.Http;
 using System.Reflection;
 
-namespace HttpWebRequestWrapper.HttpClient.Extensions
+namespace HttpWebRequestWrapper.Extensions
 {
     internal static class HttpClientHandlerExtensions
     {
