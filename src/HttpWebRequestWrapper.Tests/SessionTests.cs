@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Net;
-using HttpWebRequestWrapper.HttpClient;
 using Moq;
 using Should;
 using Xunit;
@@ -161,12 +160,13 @@ namespace HttpWebRequestWrapper.Tests
             }
         }
 
+        #if NET40
         [Fact]
         public void SupportsHttpClient()
         {
             var fakeResponse = "Testing";
 
-            using (new HttpClientAndRequestWrapperSession(
+            using (new HttpWebRequestWrapperSession(
                 new HttpWebRequestWrapperInterceptorCreator(
                     x => x.HttpWebResponseCreator.Create(fakeResponse))))
             {
@@ -176,6 +176,7 @@ namespace HttpWebRequestWrapper.Tests
                     .ShouldEqual(fakeResponse);
             }
         }
+        #endif
 
         [Fact]
         public void CanInterceptInASession()

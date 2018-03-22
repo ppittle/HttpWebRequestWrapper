@@ -6,7 +6,6 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
-using HttpWebRequestWrapper.HttpClient;
 using HttpWebRequestWrapper.Recording;
 using Should;
 using Xunit;
@@ -37,7 +36,7 @@ namespace HttpWebRequestWrapper.Tests
             HttpResponseMessage response;
 
             // ACT
-            using (new HttpClientAndRequestWrapperSession(new HttpWebRequestWrapperRecorderCreator(recordingSession)))
+            using (new HttpWebRequestWrapperSession(new HttpWebRequestWrapperRecorderCreator(recordingSession)))
             {
                 var httpClient = new System.Net.Http.HttpClient();
 
@@ -63,7 +62,7 @@ namespace HttpWebRequestWrapper.Tests
             HttpResponseMessage response;
 
             // ACT
-            using (new HttpClientAndRequestWrapperSession(new HttpWebRequestWrapperRecorderCreator(recordingSession)))
+            using (new HttpWebRequestWrapperSession(new HttpWebRequestWrapperRecorderCreator(recordingSession)))
             {
                 var httpClient = new System.Net.Http.HttpClient();
 
@@ -93,7 +92,7 @@ namespace HttpWebRequestWrapper.Tests
             HttpResponseMessage response;
 
             // ACT
-            using (new HttpClientAndRequestWrapperSession(new HttpWebRequestWrapperRecorderCreator(recordingSession)))
+            using (new HttpWebRequestWrapperSession(new HttpWebRequestWrapperRecorderCreator(recordingSession)))
             {
                 var httpClient = new System.Net.Http.HttpClient();
 
@@ -123,7 +122,7 @@ namespace HttpWebRequestWrapper.Tests
             HttpResponseMessage response;
 
             // ACT
-            using (new HttpClientAndRequestWrapperSession(new HttpWebRequestWrapperInterceptorCreator(responseCreator)))
+            using (new HttpWebRequestWrapperSession(new HttpWebRequestWrapperInterceptorCreator(responseCreator)))
             {
                 var httpClient = new System.Net.Http.HttpClient();
 
@@ -160,7 +159,7 @@ namespace HttpWebRequestWrapper.Tests
             HttpResponseMessage response;
 
             // ACT
-            using (new HttpClientAndRequestWrapperSession(
+            using (new HttpWebRequestWrapperSession(
                     new HttpWebRequestWrapperInterceptorCreator(responseCreator)))
             {
                 var httpClient = new System.Net.Http.HttpClient();
@@ -194,7 +193,7 @@ namespace HttpWebRequestWrapper.Tests
             string response;
 
             // ACT
-            using (new HttpClientAndRequestWrapperSession(new HttpWebRequestWrapperInterceptorCreator(responseCreator)))
+            using (new HttpWebRequestWrapperSession(new HttpWebRequestWrapperInterceptorCreator(responseCreator)))
             {
                 var httpClient = new System.Net.Http.HttpClient(new WebRequestHandler());
 
@@ -227,7 +226,7 @@ namespace HttpWebRequestWrapper.Tests
             string response;
 
             // ACT
-            using (new HttpClientAndRequestWrapperSession(new HttpWebRequestWrapperInterceptorCreator(responseCreator)))
+            using (new HttpWebRequestWrapperSession(new HttpWebRequestWrapperInterceptorCreator(responseCreator)))
             {
                 var httpClient = new System.Net.Http.HttpClient()
                 {
@@ -269,7 +268,7 @@ namespace HttpWebRequestWrapper.Tests
             HttpResponseMessage response;
 
             // ACT
-            using (new HttpClientAndRequestWrapperSession(
+            using (new HttpWebRequestWrapperSession(
                 new HttpWebRequestWrapperInterceptorCreator(responseCreator)))
             {
                 var httpClient = new System.Net.Http.HttpClient();
@@ -309,7 +308,7 @@ namespace HttpWebRequestWrapper.Tests
                 throw new Exception($"Couldn't match url [{req.HttpWebRequest.RequestUri}]");
             });
 
-            using (new HttpClientAndRequestWrapperSession(new HttpWebRequestWrapperInterceptorCreator(responseCreator)))
+            using (new HttpWebRequestWrapperSession(new HttpWebRequestWrapperInterceptorCreator(responseCreator)))
             {
                 // ACT
                 var sharedClient = new System.Net.Http.HttpClient();
@@ -383,7 +382,7 @@ namespace HttpWebRequestWrapper.Tests
             };
 
             // ACT
-            using (new HttpClientAndRequestWrapperSession(new HttpWebRequestWrapperInterceptorCreator(requestBuilder)))
+            using (new HttpWebRequestWrapperSession(new HttpWebRequestWrapperInterceptorCreator(requestBuilder)))
             {
 
                 for (var i = 0; i < numberOfSequentialRequests; i++)
@@ -431,7 +430,7 @@ namespace HttpWebRequestWrapper.Tests
             HttpResponseMessage response;
 
             // ACT
-            using (new HttpClientAndRequestWrapperSession(new HttpWebRequestWrapperInterceptorCreator(responseCreator)))
+            using (new HttpWebRequestWrapperSession(new HttpWebRequestWrapperInterceptorCreator(responseCreator)))
             {
                 var httpClient = new System.Net.Http.HttpClient();
 
