@@ -38,7 +38,7 @@ namespace HttpWebRequestWrapper.Tests
             // ACT
             using (new HttpWebRequestWrapperSession(new HttpWebRequestWrapperRecorderCreator(recordingSession)))
             {
-                var httpClient = new System.Net.Http.HttpClient();
+                var httpClient = new HttpClient();
 
                 response = await httpClient.GetAsync(url);
             }
@@ -64,7 +64,7 @@ namespace HttpWebRequestWrapper.Tests
             // ACT
             using (new HttpWebRequestWrapperSession(new HttpWebRequestWrapperRecorderCreator(recordingSession)))
             {
-                var httpClient = new System.Net.Http.HttpClient();
+                var httpClient = new HttpClient();
 
                 response = await httpClient.GetAsync("https://accounts.google.com/o/oauth2/auth");
             }
@@ -94,7 +94,7 @@ namespace HttpWebRequestWrapper.Tests
             // ACT
             using (new HttpWebRequestWrapperSession(new HttpWebRequestWrapperRecorderCreator(recordingSession)))
             {
-                var httpClient = new System.Net.Http.HttpClient();
+                var httpClient = new HttpClient();
 
                 response = await httpClient.PostAsync(url, new StringContent(requestBody));
             }
@@ -124,7 +124,7 @@ namespace HttpWebRequestWrapper.Tests
             // ACT
             using (new HttpWebRequestWrapperSession(new HttpWebRequestWrapperInterceptorCreator(responseCreator)))
             {
-                var httpClient = new System.Net.Http.HttpClient();
+                var httpClient = new HttpClient();
 
                 response = await httpClient.GetAsync(new Uri("http://fakeSite.fake"));
             }
@@ -162,7 +162,7 @@ namespace HttpWebRequestWrapper.Tests
             using (new HttpWebRequestWrapperSession(
                     new HttpWebRequestWrapperInterceptorCreator(responseCreator)))
             {
-                var httpClient = new System.Net.Http.HttpClient();
+                var httpClient = new HttpClient();
 
                 response = await httpClient.PostAsync(requestUrl, new StringContent(requestBody));
             }
@@ -195,7 +195,7 @@ namespace HttpWebRequestWrapper.Tests
             // ACT
             using (new HttpWebRequestWrapperSession(new HttpWebRequestWrapperInterceptorCreator(responseCreator)))
             {
-                var httpClient = new System.Net.Http.HttpClient(new WebRequestHandler());
+                var httpClient = new HttpClient(new WebRequestHandler());
 
                 response = await httpClient.GetStringAsync(requestUrl);
             }
@@ -228,7 +228,7 @@ namespace HttpWebRequestWrapper.Tests
             // ACT
             using (new HttpWebRequestWrapperSession(new HttpWebRequestWrapperInterceptorCreator(responseCreator)))
             {
-                var httpClient = new System.Net.Http.HttpClient()
+                var httpClient = new HttpClient()
                 {
                     BaseAddress = requestBaseUrl
                 };
@@ -271,7 +271,7 @@ namespace HttpWebRequestWrapper.Tests
             using (new HttpWebRequestWrapperSession(
                 new HttpWebRequestWrapperInterceptorCreator(responseCreator)))
             {
-                var httpClient = new System.Net.Http.HttpClient();
+                var httpClient = new HttpClient();
 
                 response = await httpClient.SendAsync(requestMessage);
             }
@@ -311,12 +311,12 @@ namespace HttpWebRequestWrapper.Tests
             using (new HttpWebRequestWrapperSession(new HttpWebRequestWrapperInterceptorCreator(responseCreator)))
             {
                 // ACT
-                var sharedClient = new System.Net.Http.HttpClient();
+                var sharedClient = new HttpClient();
 
                 var task1 = sharedClient.GetStringAsync(url1);
                 var task2 = sharedClient.GetStringAsync(url2);
-                var task3 = new System.Net.Http.HttpClient().GetStringAsync(url3);
-                var task1b = new System.Net.Http.HttpClient().GetStringAsync(url1);
+                var task3 = new HttpClient().GetStringAsync(url3);
+                var task1b = new HttpClient().GetStringAsync(url1);
 
                 await Task.WhenAll(task1, task2, task3, task1b);
 
@@ -387,7 +387,7 @@ namespace HttpWebRequestWrapper.Tests
 
                 for (var i = 0; i < numberOfSequentialRequests; i++)
                 {
-                    var httpClient = new System.Net.Http.HttpClient(new WebRequestHandler());
+                    var httpClient = new HttpClient(new WebRequestHandler());
                     
                     var message = new HttpRequestMessage(HttpMethod.Post, recordedRequest.Url)
                     {
@@ -432,7 +432,7 @@ namespace HttpWebRequestWrapper.Tests
             // ACT
             using (new HttpWebRequestWrapperSession(new HttpWebRequestWrapperInterceptorCreator(responseCreator)))
             {
-                var httpClient = new System.Net.Http.HttpClient();
+                var httpClient = new HttpClient();
 
                 response = await httpClient.GetAsync(new Uri("http://fakeSite.fake"));
             }

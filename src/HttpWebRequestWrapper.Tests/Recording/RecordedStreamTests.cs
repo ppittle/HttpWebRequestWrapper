@@ -7,6 +7,10 @@ using HttpWebRequestWrapper.Recording;
 using Should;
 using Xunit;
 
+// Justification: Test class
+// ReSharper disable ConvertToConstant.Local
+// ReSharper disable ArgumentsStyleLiteral
+
 namespace HttpWebRequestWrapper.Tests.Recording
 {
     /// <summary>
@@ -24,7 +28,7 @@ namespace HttpWebRequestWrapper.Tests.Recording
                 Encoding.UTF8.GetBytes(content),
                 new HttpWebRequestWrapper(new Uri("http://fakeSite.fake"))
                 {
-                    // set content type to force string conetent to be
+                    // set content type to force string content to be
                     // encoded
                     ContentType = "image/png"
                 });
@@ -56,7 +60,7 @@ namespace HttpWebRequestWrapper.Tests.Recording
         }
 
         [Fact]
-        public void GZippedStreamIsStoredUncompresseed()
+        public void GZippedStreamIsStoredUncompressed()
         {
             // ARRANGE
             var content = "Hello World";
@@ -118,7 +122,7 @@ namespace HttpWebRequestWrapper.Tests.Recording
 
             // ASSERT
             recordedStream.IsEncoded.ShouldBeFalse();
-            recordedStream.IsDefalteCompressed.ShouldBeTrue();
+            recordedStream.IsDeflateCompressed.ShouldBeTrue();
 
             toString.ShouldEqual(content);
         }

@@ -2,6 +2,9 @@
 using System.IO;
 using System.Net;
 using HttpWebRequestWrapper.Recording;
+// ReSharper disable ArgumentsStyleNamedExpression
+// ReSharper disable ArgumentsStyleOther
+// ReSharper disable ArgumentsStyleLiteral
 
 namespace HttpWebRequestWrapper.Extensions
 {

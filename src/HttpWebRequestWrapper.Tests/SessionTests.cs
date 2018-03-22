@@ -7,6 +7,7 @@ using Xunit;
 
 // Justification: Test Class
 // ReSharper disable AssignNullToNotNullAttribute
+// ReSharper disable ConvertToConstant.Local
 
 namespace HttpWebRequestWrapper.Tests
 {

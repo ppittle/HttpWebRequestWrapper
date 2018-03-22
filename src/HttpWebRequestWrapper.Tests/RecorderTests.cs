@@ -16,6 +16,7 @@ using Xunit;
 // ReSharper disable AssignNullToNotNullAttribute
 // ReSharper disable PossibleNullReferenceException
 // ReSharper disable ConvertToConstant.Local
+// ReSharper disable ArgumentsStyleNamedExpression
 
 namespace HttpWebRequestWrapper.Tests
 {

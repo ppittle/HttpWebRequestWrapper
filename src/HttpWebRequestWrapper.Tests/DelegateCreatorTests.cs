@@ -4,6 +4,9 @@ using Moq;
 using Should;
 using Xunit;
 
+// Justification: Test class
+// ReSharper disable ImplicitlyCapturedClosure
+
 namespace HttpWebRequestWrapper.Tests
 {
     /// <summary>
