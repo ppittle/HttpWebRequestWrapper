@@ -15,70 +15,165 @@ namespace HttpWebRequestWrapper
     /// by <see cref="HttpWebRequestWrapperSession"/> and feed into a 
     /// <see cref="TaskSchedulerProxy"/>.
     /// <para />
-    /// This allows <see cref="Visit"/> to intercept the task 
+    /// This allows <see cref="DotNet45AndEarlierStrategy.Visit"/> to intercept the task 
     /// for HttpClientHandler.StartRequest and replaces the 
     /// <see cref="HttpWebRequest"/> that the <see cref="HttpClientHandler"/> just built
     /// with a fully built HttpWebRequest that was built via <see cref="WebRequest.Create(string)"/>.
     /// <para />
     /// See <see cref="HttpWebRequestWrapperSession"/> for more information.
     /// </summary>
-    internal class HttpClientHandlerStartRequestTaskVisitor : IVisitTaskOnSchedulerQueue
+    internal class HttpClientHandlerStartRequestTaskVisitor
     {
-        // ReSharper disable once InconsistentNaming
-        private static readonly MethodInfo _httpClientHandler_StartRequestMethod =
-            typeof(HttpClientHandler)
-                .GetMethod(
-                    "StartRequest", 
-                    BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-
-        /// <summary>
-        /// If the intercepted task is for HttpClientHandler.StartRequest,
-        /// replaces the HttpWebRequest that HttpClientHandler just built
-        /// with a fully built HttpWebRequest that was built via <see cref="WebRequest.Create(string)"/>.
-        /// <para />
-        /// See <see cref="HttpClientHandlerStartRequestTaskVisitor"/> for more information.
-        /// </summary>
-        public void Visit(Task task)
+        internal class DotNet45AndEarlierStrategy : IVisitTaskOnSchedulerQueue
         {
-            // is the task's action a delegate (ie method invocation)?
-            if (!(task.GetAction() is Delegate taskAction))
-                return;
+            // ReSharper disable once InconsistentNaming
+            private static readonly MethodInfo _httpClientHandler_StartRequestMethod =
+                typeof(HttpClientHandler)
+                    .GetMethod(
+                        "StartRequest",
+                        BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 
-            // is the task to invoke HttpClientHandler.StartRequest?
-            if (!ReferenceEquals(taskAction.Method, _httpClientHandler_StartRequestMethod))
-                return;
+            /// <summary>
+            /// If the intercepted task is for HttpClientHandler.StartRequest,
+            /// replaces the HttpWebRequest that HttpClientHandler just built
+            /// with a fully built HttpWebRequest that was built via <see cref="WebRequest.Create(string)"/>.
+            /// <para />
+            /// See <see cref="HttpClientHandlerStartRequestTaskVisitor"/> for more information.
+            /// </summary>
+            public void Visit(Task task)
+            {
+                // is the task's action a delegate (ie method invocation)?
+                if (!(task.GetAction() is Delegate taskAction))
+                    return;
 
-            // build a wrapper around the Request State stored in AsyncState
-            var requestStateWrapper = new HttpClientHandlerRequestStateWrapper(task.AsyncState);
+                // is the task to invoke HttpClientHandler.StartRequest?
+                if (!ReferenceEquals(taskAction.Method, _httpClientHandler_StartRequestMethod))
+                    return;
 
-            // get the HttpRequestMessage we've intercepted
-            var requestMessage = requestStateWrapper.GetHttpRequestMessage();
+                // build a wrapper around the Request State stored in AsyncState
+                var requestStateWrapper = new HttpClientHandlerRequestStateWrapper(task.AsyncState);
 
-            // build a new HttpWebRequest using the WebRequest factory - this should
-            // return a MockHttpWebRequest or whatever the user has configured in the 
-            // HttpClientAndRequestWrapperSession
-            var httpWebRequest = (HttpWebRequest)WebRequest.Create(requestMessage.RequestUri);
+                // get the HttpRequestMessage we've intercepted
+                var requestMessage = requestStateWrapper.GetHttpRequestMessage();
 
-            // http client uses a special constructor that suppresses HttpWebRequest from
-            // throwing exceptions on non 200 results
-            httpWebRequest.SetReturnResponseOnFailureStatusCode(true);
+                // build a new HttpWebRequest using the WebRequest factory - this should
+                // return a MockHttpWebRequest or whatever the user has configured in the 
+                // HttpClientAndRequestWrapperSession
+                var httpWebRequest = (HttpWebRequest) WebRequest.Create(requestMessage.RequestUri);
 
-            // get a reference to the HttpClientHandler we've intercepted
-            var handler = (HttpClientHandler)taskAction.Target;
+                // http client uses a special constructor that suppresses HttpWebRequest from
+                // throwing exceptions on non 200 results
+                httpWebRequest.SetReturnResponseOnFailureStatusCode(true);
 
-            // copy the request message to the http web request we just built
-            handler.PrepareWebRequest(httpWebRequest, requestMessage);
+                // get a reference to the HttpClientHandler we've intercepted
+                var handler = (HttpClientHandler) taskAction.Target;
 
-            // save the http web request back to the request state - 
-            // now when the intercepted handler continues executing
-            // StartRequest, it will be using our custom HttpWebRequest!!
-            requestStateWrapper.SetHttpWebRequest(httpWebRequest);
+                // copy the request message to the http web request we just built
+                handler.PrepareWebRequest(httpWebRequest, requestMessage);
 
-            // we'll also need to intercept how the HttpClientHandler 
-            // acquires the request stream to make sure we can intercept
-            // the request body, so replace the GetRequestStreamCallback
-            // continuation
-            handler.SetGetRequestStreamCallback(asyncResult => CustomGetRequestStreamCallback(asyncResult, handler));
+                // save the http web request back to the request state - 
+                // now when the intercepted handler continues executing
+                // StartRequest, it will be using our custom HttpWebRequest!!
+                requestStateWrapper.SetHttpWebRequest(httpWebRequest);
+
+                // we'll also need to intercept how the HttpClientHandler 
+                // acquires the request stream to make sure we can intercept
+                // the request body, so replace the GetRequestStreamCallback
+                // continuation
+                handler.SetGetRequestStreamCallback(asyncResult => CustomGetRequestStreamCallback(asyncResult, handler));
+            }
+        }
+
+        internal class DotNet47Strategy : IVisitTaskOnSchedulerQueue
+        {
+            private const string StartRequestActionDelegateTypeName =
+                "System.Net.Http.HttpClientHandler+<>c__DisplayClass105_0";
+
+            public void Visit(Task task)
+            {
+                // is the task's action a delegate (ie method invocation)?
+                if (!(task.GetAction() is Delegate taskAction))
+                    return;
+
+                // is the task to invoke HttpClientHandler.StartRequest?
+                if (taskAction.Target.GetType().FullName != StartRequestActionDelegateTypeName)
+                    return;
+
+                // prepare the delegate for reflection
+                var requestStateDelegateWrapper = new RequestStateDelegateWrapper(taskAction.Target);
+
+                // get the delegate 'state' - which has the HttpRequestMessage and pointer to 
+                // parent HttpClientHandler
+                var requestStateWrapper = requestStateDelegateWrapper.GetRequestState();
+
+                // get the HttpRequestMessage we've intercepted
+                var requestMessage = requestStateWrapper.GetHttpRequestMessage();
+
+                // build a new HttpWebRequest using the WebRequest factory - this should
+                // return a MockHttpWebRequest or whatever the user has configured in the 
+                // HttpClientAndRequestWrapperSession
+                var httpWebRequest = (HttpWebRequest) WebRequest.Create(requestMessage.RequestUri);
+
+                // http client uses a special constructor that suppresses HttpWebRequest from
+                // throwing exceptions on non 200 results
+                httpWebRequest.SetReturnResponseOnFailureStatusCode(true);
+
+                var handler = requestStateDelegateWrapper.GetHttpClientHandler();
+
+                // copy the request message to the http web request we just built
+                handler.PrepareWebRequest(httpWebRequest, requestMessage);
+
+                // save the http web request back to the request state - 
+                // now when the intercepted handler continues executing
+                // StartRequest, it will be using our custom HttpWebRequest!!
+                requestStateWrapper.SetHttpWebRequest(httpWebRequest);
+
+                // we'll also need to intercept how the HttpClientHandler 
+                // acquires the request stream to make sure we can intercept
+                // the request body, so replace the GetRequestStreamCallback
+                // continuation
+                handler.SetGetRequestStreamCallback(asyncResult =>
+                    CustomGetRequestStreamCallback(asyncResult, handler));
+            }
+
+            private class RequestStateDelegateWrapper
+            {
+                private static readonly FieldInfo _stateDelegateField;
+                private static readonly FieldInfo _httpClientHandlerField;
+
+                static RequestStateDelegateWrapper()
+                {
+                    _stateDelegateField =
+                        typeof(HttpClientHandler)
+                            .Assembly
+                            .GetType(StartRequestActionDelegateTypeName)
+                            .GetField("state");
+
+                    _httpClientHandlerField =
+                        typeof(HttpClientHandler)
+                            .Assembly
+                            .GetType(StartRequestActionDelegateTypeName)
+                            .GetField("<>4__this");
+                }
+
+                private readonly object _startRequestDelegate;
+
+                public RequestStateDelegateWrapper(object startRequestDelegate)
+                {
+                    _startRequestDelegate = startRequestDelegate;
+                }
+
+                public HttpClientHandlerRequestStateWrapper GetRequestState()
+                {
+                    return new HttpClientHandlerRequestStateWrapper(
+                        _stateDelegateField.GetValue(_startRequestDelegate));
+                }
+
+                public HttpClientHandler GetHttpClientHandler()
+                {
+                    return (HttpClientHandler) _httpClientHandlerField.GetValue(_startRequestDelegate);
+                }
+            }
         }
 
         /// <summary>
@@ -88,7 +183,7 @@ namespace HttpWebRequestWrapper
         /// and force using <see cref="HttpWebRequestWrapperRecorder.EndGetRequestStream(System.IAsyncResult)"/>
         /// (which is intercepted)
         /// </summary>
-        private void CustomGetRequestStreamCallback(IAsyncResult ar, HttpClientHandler httpClientHandler)
+        private static void CustomGetRequestStreamCallback(IAsyncResult ar, HttpClientHandler httpClientHandler)
         {
             // build a wrapper around the Request State stored in AsyncState
             var requestStateWrapper = new HttpClientHandlerRequestStateWrapper(ar.AsyncState);
@@ -111,7 +206,7 @@ namespace HttpWebRequestWrapper
             // continue on with StartGettingResponse
             httpClientHandler.StartGettingResponse(ar.AsyncState);
         }
-        
+
         /// <summary>
         /// Reflection helper for working with the nested  private class 
         /// <see cref="T:System.Net.Http.HttpClientHandler.RequestState"/>
@@ -139,7 +234,7 @@ namespace HttpWebRequestWrapper
                 _httpWebRequestField =
                     httpClientHandlerRequestStateType
                         .GetField(
-                            "webRequest", 
+                            "webRequest",
                             BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 
                 _requestStreamField =

@@ -92,5 +92,50 @@ namespace HttpWebRequestWrapper
 
             return o;
         }
+
+        /// <summary>
+        /// Uses reflection to load the value of property <paramref name="propertyName"/>
+        /// from <paramref name="from"/> and then uses the value to set the same
+        /// property on <paramref name="to"/>.
+        /// </summary>
+        public static void CopyPropertyFrom(object to, string propertyName, object from)
+        {
+            PropertyInfo property;
+            try
+            {
+                property = from.GetType().GetProperty(
+                    propertyName,
+                    BindingFlags.Instance | BindingFlags.GetProperty  | BindingFlags.SetProperty | BindingFlags.Public | BindingFlags.NonPublic);
+
+                if (null == property)
+                    throw new Exception("GetProperty() returned null");
+            }
+            catch (Exception e)
+            {
+                throw new Exception(
+                    $"Did not find a property [{propertyName}] on type [{from.GetType().FullName}]: {e.Message}", e);
+            }
+
+            object fromPropertyValue;
+            try
+            {
+                fromPropertyValue = property.GetValue(from, null);
+            }
+            catch (Exception e)
+            {
+                throw new Exception($"Failed to get [{from.GetType().FullName}.{propertyName}] from [from] which is of type []: " + e.Message, e);
+            }
+
+            try
+            {
+                property.SetValue(to, fromPropertyValue, null);
+            }
+            catch (Exception e)
+            {
+                throw new Exception(
+                    $"Failed setting [{to.GetType().FullName}.{propertyName}] with value of type " +
+                    $"[{fromPropertyValue?.GetType().Name ?? "null"}]: {e.Message}", e);
+            }
+        }
     }
 }
