@@ -31,13 +31,26 @@ namespace HttpWebRequestWrapper.Extensions
             typeof(HttpClientHandler)
                 .GetMethod("InitializeWebRequest", BindingFlags.NonPublic | BindingFlags.Instance);
 
-        private static readonly FieldInfo _getRequestStreamCallback =
-            typeof(HttpClientHandler)
-                .GetField("getRequestStreamCallback", BindingFlags.NonPublic | BindingFlags.Instance);
-
         private static readonly MethodInfo _startGettingResponse =
             typeof(HttpClientHandler)
                 .GetMethod("StartGettingResponse", BindingFlags.NonPublic | BindingFlags.Instance);
+
+        private static readonly FieldInfo _getRequestStreamCallback;
+
+        static HttpClientHandlerExtensions()
+        {
+            _getRequestStreamCallback = 
+                // Microsoft changed the field name between versions, so check for either name
+                typeof(HttpClientHandler)
+                    .GetField(
+                        "getRequestStreamCallback", 
+                        BindingFlags.NonPublic | BindingFlags.Instance)
+                ??
+                typeof(HttpClientHandler)
+                    .GetField(
+                        "_getRequestStreamCallback", 
+                        BindingFlags.NonPublic | BindingFlags.Instance);
+        }
 
         /// <summary>
         /// This is basically just <see cref="T:System.Net.Http.HttpClientHandler.CreateAndPrepareWebRequest"/>,
