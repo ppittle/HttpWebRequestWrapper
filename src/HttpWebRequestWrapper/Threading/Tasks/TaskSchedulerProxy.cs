@@ -8,10 +8,10 @@ namespace HttpWebRequestWrapper.Threading.Tasks
     /// Black Magic.  Intercepts the scheduling of all Tasks
     /// so the passed <see cref="IVisitTaskOnSchedulerQueue"/> can 
     /// inspect them and potentially modify them, like 
-    /// changing thier <see cref="Task.AsyncState"/>.
+    /// changing their <see cref="Task.AsyncState"/>.
     /// <para />
     /// <see cref="HttpClientHandlerStartRequestTaskVisitor"/> for an 
-    /// example and more informaton.
+    /// example and more information.
     /// </summary>
     internal class TaskSchedulerProxy : TaskScheduler
     {
