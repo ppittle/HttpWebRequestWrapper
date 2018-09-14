@@ -99,7 +99,11 @@ namespace HttpWebRequestWrapper
             // proxy that's wired up with the HttpClientHandlerStartRequestTaskVisitor 
             var httpClientInterceptorTaskScheduler =
                 new TaskSchedulerProxy(
-                    new HttpClientHandlerStartRequestTaskVisitor(),
+                    new IVisitTaskOnSchedulerQueue[]
+                    {
+                        new HttpClientHandlerStartRequestTaskVisitor.DotNet45AndEarlierStrategy(), 
+                        new HttpClientHandlerStartRequestTaskVisitor.DotNet47Strategy() 
+                    },
                     TaskScheduler.Current);
 
             httpClientInterceptorTaskScheduler.SetAsDefaultTaskScheduler();
