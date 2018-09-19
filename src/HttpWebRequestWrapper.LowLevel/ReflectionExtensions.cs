@@ -98,7 +98,7 @@ namespace HttpWebRequestWrapper
         /// from <paramref name="from"/> and then uses the value to set the same
         /// property on <paramref name="to"/>.
         /// </summary>
-        public static void CopyPropertyFrom(object to, string propertyName, object from)
+        public static void CopyPropertyFromIfExists(object to, string propertyName, object from)
         {
             PropertyInfo property;
             try
@@ -108,12 +108,12 @@ namespace HttpWebRequestWrapper
                     BindingFlags.Instance | BindingFlags.GetProperty  | BindingFlags.SetProperty | BindingFlags.Public | BindingFlags.NonPublic);
 
                 if (null == property)
-                    throw new Exception("GetProperty() returned null");
+                    return;
             }
             catch (Exception e)
             {
                 throw new Exception(
-                    $"Did not find a property [{propertyName}] on type [{from.GetType().FullName}]: {e.Message}", e);
+                    $"Failed getting property [{propertyName}] on type [{from.GetType().FullName}]: {e.Message}", e);
             }
 
             object fromPropertyValue;

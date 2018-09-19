@@ -56,7 +56,7 @@ namespace HttpWebRequestWrapper
             // copy the fields that HttpWebRequest sets in its constructor
 
             // .NET 4.7
-            ReflectionExtensions.CopyPropertyFrom(wrapper, "SslProtocols", httpWebRequest);
+            ReflectionExtensions.CopyPropertyFromIfExists(wrapper, "SslProtocols", httpWebRequest);
 
             ReflectionExtensions.CopyFieldFrom(wrapper, "m_StartTimestamp", httpWebRequest);
             ReflectionExtensions.CopyFieldFrom(wrapper, "_HttpRequestHeaders", httpWebRequest);
