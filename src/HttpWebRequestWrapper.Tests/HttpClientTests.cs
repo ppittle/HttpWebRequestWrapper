@@ -54,7 +54,9 @@ namespace HttpWebRequestWrapper.Tests
         }
 
         // WARNING!! Makes live request
-        [Fact(Timeout = 10000)]
+        [Fact(
+            Timeout = 10000,
+            Skip = "Reliance on live google url; server has since changed behavior.")]
         public async Task CanRecordWebRequestException()
         {
             // ARRANGE
