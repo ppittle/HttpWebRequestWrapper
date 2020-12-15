@@ -289,7 +289,9 @@ namespace HttpWebRequestWrapper.Tests
         /// Make sure this exception gets recorded.
         /// </summary>
         // WARNING!! Makes live request
-        [Fact(Timeout = 10000)]
+        [Fact(
+            Timeout = 10000,
+            Skip = "Reliance on live google url; server has since changed behavior.")]
         public void CanRecordRequestThatThrowsExceptionOnGetResponse()
         {
             // ARRANGE
