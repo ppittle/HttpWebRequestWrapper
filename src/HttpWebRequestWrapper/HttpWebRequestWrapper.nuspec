@@ -18,7 +18,7 @@
       
       Now supports HttpClient!!
     </releaseNotes>
-    <copyright>Copyright 2018</copyright>
+    <copyright>Copyright 2021</copyright>
     <tags>HttpWebRequestWrapper, HttpWebRequest, HttpWebResponse, WebClient, HttpClient MockHttpWebRequest, MockHttpWebResponse, mock, test, fake, stub, bdd, recoding, playback</tags>
   </metadata>
   <files>
