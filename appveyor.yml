@@ -1,10 +1,11 @@
+version: 2.0.{build}
 image: Visual Studio 2017
+configuration: Release
 init:
 - ps: >-
     $env:customnugetversion = if ($env:APPVEYOR_REPO_BRANCH -eq "master") { "$env:APPVEYOR_BUILD_VERSION" } else { "$env:APPVEYOR_BUILD_VERSION-$env:APPVEYOR_REPO_BRANCH" }
 
     Update-AppveyorBuild -Version $env:customnugetversion
-configuration: Release
 assembly_info:
   patch: true
   file: '**\AssemblyInfo.*'
@@ -12,8 +13,8 @@ assembly_info:
   assembly_file_version: '{version}'
   assembly_informational_version: '{version}'
 environment:
-  COVERALLS_REPO_TOKEN: 
-    secure: 2lQ02I3jiTTAixLH7almSAN6JiniXQJIZ
+  COVERALLS_REPO_TOKEN:
+    secure: mBmDL1xg8kZURgi5fKcmG57D70KeMb5LBh3/JA1qhfd8MI7vc6RD5GAWDOnKAPzJ
 nuget:
   disable_publish_on_pr: true
 before_build:
@@ -22,6 +23,7 @@ build:
   project: ./src/HttpWebRequestWrapper.sln
   publish_nuget: true
   publish_nuget_symbols: true
+  use_snupkg_format: true
   verbosity: minimal
 test_script:
 - ps: >-
@@ -39,6 +41,7 @@ test_script:
 deploy:
 - provider: NuGet
   api_key:
-    secure: GFJOMruKIIVHClOL1KSqa3cnO9qlXbUPzYW2g3xBtohr+rEBP4bqVUweaNg21nH5
+    secure: EzaH5z1dw0Y+smNGhPzz2SO3aSh0812bTZjKqjZcYJ5o63/RH9SzUPSYxlMRQJH8
+  skip_symbols: false
   on:
     branch: /(master|develop)/
